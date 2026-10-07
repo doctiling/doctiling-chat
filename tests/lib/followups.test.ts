@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitFollowups } from '@/lib/followups';
+import { splitFollowups } from '../../src/lib/followups';
 
 // Spec 009 FR-008 applied to the chat: the <followups> block becomes chips, never raw text.
 describe('splitFollowups', () => {

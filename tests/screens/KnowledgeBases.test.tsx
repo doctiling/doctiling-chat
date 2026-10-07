@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { KnowledgeBases } from '@/screens/KnowledgeBases';
-import { getPrefs } from '@/lib/storage';
-import { json, mockFetch, on, renderApp, seedToken, setConfig } from '../helpers/render';
+import { describe, expect, it } from 'vitest';
+import { KnowledgeBases } from '../../src/screens/KnowledgeBases';
+import { getPrefs } from '../../src/lib/storage';
+import { json, mockFetch, on, renderApp } from '../helpers/render';
 
 const items = [
   { id: 'kb-pol', name: 'Políticas', description: 'HR policies', role: 'reader', documentCount: 12, updatedAt: 1, hasPending: false, isRunning: false },
@@ -13,10 +13,6 @@ const items = [
 
 // T060 — list with role and indicators; explained empty state without error; reload on foreground. [TS-384, TS-428]
 describe('KnowledgeBases screen (T060)', () => {
-  beforeEach(() => {
-    setConfig();
-    seedToken();
-  });
 
   it('lists the bases with role, document count and pending/running indicators (TS-428)', async () => {
     mockFetch([{ match: on('GET', '/api/chat/knowledge-bases'), respond: () => json({ items }) }]);
@@ -34,7 +30,7 @@ describe('KnowledgeBases screen (T060)', () => {
     mockFetch([{ match: on('GET', '/api/chat/knowledge-bases'), respond: () => json({ items }) }]);
     renderApp(<KnowledgeBases />);
     await userEvent.setup().click(await screen.findByText('Políticas'));
-    expect(window.location.pathname).toBe('/kb/kb-pol');
+    expect(window.location.pathname).toBe('/es/chat/kb/kb-pol');
     expect(getPrefs().lastKbId).toBe('kb-pol');
   });
 

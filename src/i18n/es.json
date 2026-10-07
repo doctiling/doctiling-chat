@@ -10,45 +10,6 @@
     "openSettings": "Ajustes",
     "menu": "Menú"
   },
-  "connect": {
-    "title": "Conversa con el conocimiento de tu organización",
-    "lead": "Doctiling Chat usa tu cuenta de {host}. No hay nada que registrar: conecta una vez y pregunta desde el teléfono.",
-    "leadNoHost": "Doctiling Chat usa la cuenta que ya tienes en el estudio de tu organización. No hay nada que registrar.",
-    "button": "Conectar",
-    "buttonHint": "Abre el estudio de tu organización para confirmar que eres tú",
-    "connecting": "Abriendo tu estudio…",
-    "howItWorks": "¿Cómo funciona?",
-    "steps": {
-      "one": "Entras al estudio de tu organización como siempre.",
-      "two": "Confirmas que quieres conectar el chat.",
-      "three": "Vuelves aquí identificada y ves las bases que te compartieron."
-    },
-    "signedOut": {
-      "self": "Cerraste sesión.",
-      "invalid": "Tu sesión del chat ya no es válida. Conecta de nuevo.",
-      "expired": "Tu sesión del chat venció. Conecta de nuevo.",
-      "revoked": "Tu acceso fue retirado. Conecta de nuevo si crees que es un error.",
-      "chat_disabled": "El chat no está habilitado para esta organización.",
-      "unknown": "Conecta de nuevo para continuar."
-    },
-    "callback": {
-      "title": "Conectando…",
-      "working": "Comprobando tu acceso con el estudio…",
-      "done": "Conectado. Te llevamos a tus bases…",
-      "openInApp": "Abrir en la app",
-      "openInAppHint": "Estás en el navegador. Abre Doctiling Chat desde tu pantalla de inicio y conecta de nuevo desde allí.",
-      "tryAgain": "Intentar de nuevo"
-    },
-    "errors": {
-      "state_mismatch": "Esta conexión no empezó en este dispositivo. Empieza de nuevo desde el chat.",
-      "missing_code": "El estudio no envió el código de conexión. Empieza de nuevo.",
-      "invalid_code": "Este enlace de conexión ya no es válido. Conecta de nuevo.",
-      "rate_limited": "Demasiados intentos. Prueba de nuevo en un rato.",
-      "chat_disabled": "El chat no está habilitado para esta organización.",
-      "network": "No se pudo llegar al estudio de tu organización. Revisa tu conexión y reintenta.",
-      "unknown": "Algo falló al conectar. Intenta de nuevo."
-    }
-  },
   "kb": {
     "title": "Bases de conocimiento",
     "subtitle": "Solo lo que te han compartido.",
@@ -170,7 +131,6 @@
       "collaborator": "Colaboración",
       "guest": "Invitada"
     },
-    "sessionUntil": "Sesión válida hasta {date}",
     "language": "Idioma",
     "languages": {
       "en": "English",
@@ -178,10 +138,10 @@
     },
     "version": "Versión",
     "signOut": "Cerrar sesión",
-    "signOutHint": "Desconectar este dispositivo del chat de tu organización",
-    "signingOut": "Cerrando sesión…",
+    "signOutHint": "Cierra tu sesión del estudio en este dispositivo",
     "install": "Instalar la app",
-    "loadFailed": "No se pudo cargar tu cuenta."
+    "loadFailed": "No se pudo cargar tu cuenta.",
+    "openStudio": "Abrir el estudio"
   },
   "offline": {
     "banner": "Sin conexión. No se muestra nada desde una copia local.",
@@ -200,5 +160,10 @@
       "body": "Toca Compartir y luego \"Añadir a pantalla de inicio\". El chat se abre a pantalla completa y conserva tu sesión.",
       "dismiss": "Ahora no"
     }
+  },
+  "notEnabled": {
+    "title": "El chat no está habilitado aquí",
+    "body": "Tu organización no ha activado Doctiling Chat en este espacio. El estudio sigue funcionando como siempre.",
+    "cta": "Ir al estudio"
   }
 }

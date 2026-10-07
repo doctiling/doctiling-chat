@@ -14,9 +14,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # @doctiling/ui is a peer that lives in the private doctiling-web repo
+      # (packages/ui, raw TS). WEB_READ_TOKEN: a PAT with read access to it.
+      - uses: actions/checkout@v4
+        with:
+          repository: doctiling/doctiling-web
+          token: ${{ secrets.WEB_READ_TOKEN }}
+          path: web
+          sparse-checkout: packages/ui
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
       - run: npm ci
       - run: npm run gate
+        env:
+          DOCTILING_UI_DIR: ${{ github.workspace }}/web/packages/ui

@@ -1,14 +1,18 @@
 {
   "name": "@doctiling/chat",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Doctiling Chat: mobile-first installable client of a tenant's /api/chat (spec 045). Pure client: no business rules live here.",
+  "version": "0.2.0",
+  "description": "Doctiling Chat: the mobile-first, installable chat of a tenant, as a React package compiled into the studio (doctiling-web, spec 045). Pure client: no business rules live here.",
   "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pwa": "./src/pwa.ts",
+    "./styles.css": "./src/styles.css",
+    "./public/*": "./public/*",
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "start": "node server/serve.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint --max-warnings=0 .",
@@ -22,17 +26,25 @@
     "type": "git",
     "url": "https://github.com/doctiling/doctiling-chat.git"
   },
+  "files": [
+    "src",
+    "public",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=20"
   },
-  "dependencies": {
-    "@doctiling/brand": "https://codeload.github.com/doctiling/doctiling-brand/tar.gz/refs/tags/v0.1.0",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "lucide-react": "^0.475.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+  "peerDependencies": {
+    "lucide-react": "*",
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "devDependencies": {
+    "@doctiling/brand": "https://codeload.github.com/doctiling/doctiling-brand/tar.gz/refs/tags/v0.1.0",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tooltip": "^1.1.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -40,14 +52,16 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "eslint": "^9.20.0",
     "jsdom": "^26.0.0",
-    "postcss": "^8.5.1",
-    "tailwindcss": "^3.4.17",
+    "lucide-react": "^0.475.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^3.0.1",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.24.0",
-    "vite": "^5.4.14",
     "vitest": "^3.0.5"
   }
 }

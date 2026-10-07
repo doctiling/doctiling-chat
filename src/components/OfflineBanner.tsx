@@ -1,6 +1,6 @@
 import { WifiOff } from 'lucide-react';
-import { useLanguage } from '@/i18n/use-language';
-import { useOnline } from '@/lib/online';
+import { useLanguage } from '../i18n/use-language';
+import { useOnline } from '../lib/online';
 
 export function OfflineBanner({ onRetry }: { onRetry?: () => void }) {
   const { t } = useLanguage();
@@ -15,7 +15,7 @@ export function OfflineBanner({ onRetry }: { onRetry?: () => void }) {
       <WifiOff className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
       <span className="flex-1">{t('offline.banner')}</span>
       {onRetry && (
-        <button type="button" className="min-h-touch px-2 font-medium text-primary" onClick={onRetry}>
+        <button type="button" className="min-h-[44px] px-2 font-medium text-primary" onClick={onRetry}>
           {t('offline.retry')}
         </button>
       )}

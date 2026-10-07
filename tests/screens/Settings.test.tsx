@@ -1,70 +1,57 @@
-import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { Settings } from '@/screens/Settings';
-import { onSignOut } from '@/lib/api';
-import { getPrefs, getToken, setPrefs } from '@/lib/storage';
-import { empty, headerOf, json, mockFetch, on, renderApp, seedToken, setConfig } from '../helpers/render';
+import { act, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { Settings, localeHref } from '../../src/screens/Settings';
+import { HOST, json, mockFetch, on, renderApp } from '../helpers/render';
 
-const me = { email: 'ana@tenant.test', name: 'Ana', role: 'guest', tenant: { host: 'studio.tenant.test', name: 'Tenant Co' }, limits: { tokenExpiresAt: Date.UTC(2026, 10, 6) } };
+const me = { email: 'ana@tenant.test', name: 'Ana', role: 'guest', tenant: { host: 'studio.tenant.test', name: 'Tenant Co' } };
 
-// T068 — account from /me, language, version, sign out → revoke + clearAll → Connect. [TS-399, TS-434]
+// T068 — account from /me (no token limits), language = link to the other locale's basePath, version,
+// sign out = plain link to the studio's signOutHref (one session). [TS-399, TS-434]
 describe('Settings (T068)', () => {
-  beforeEach(() => {
-    setConfig({ version: '0.1.0-test' });
-    seedToken('dct_chat_me');
-  });
-
   it('shows the account, organisation, role and version', async () => {
     mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json(me) }]);
     renderApp(<Settings />);
     expect(await screen.findByText('Ana · ana@tenant.test')).toBeInTheDocument();
     expect(screen.getByText(/Tenant Co \(studio.tenant.test\) · Guest/)).toBeInTheDocument();
-    expect(screen.getByTestId('version')).toHaveTextContent('0.1.0-test');
+    expect(screen.getByTestId('version')).toHaveTextContent(HOST.version);
+    expect(screen.getByRole('link', { name: /open the studio/i })).toHaveAttribute('href', HOST.studioHref);
   });
 
-  it('switches the language and persists it', async () => {
+  it('the language toggle links to the same route under the other locale, the current one is not a link', async () => {
+    window.history.replaceState(null, '', '/es/chat/settings');
     mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json(me) }]);
-    renderApp(<Settings />);
-    await userEvent.setup().click(screen.getByRole('radio', { name: 'Español' }));
+    renderApp(<Settings />, { language: 'es' });
     expect(screen.getByRole('heading', { name: 'Ajustes' })).toBeInTheDocument();
-    expect(getPrefs().language).toBe('es');
+    const en = screen.getByTestId('language-en');
+    expect(en).toHaveAttribute('href', '/en/chat/settings');
+    expect(en).toHaveAttribute('hreflang', 'en');
+    expect(screen.queryByTestId('language-es')).not.toBeInTheDocument();
+    expect(screen.getByText('Español')).toHaveAttribute('aria-current', 'true');
   });
 
-  it('Sign out revokes on the server with the bearer, clears everything but the language, and signs out (TS-399, TS-434)', async () => {
-    setPrefs({ language: 'es', lastKbId: 'kb1', iosHintDismissed: true });
-    const { calls } = mockFetch([
-      { match: on('GET', '/api/chat/me'), respond: () => json(me) },
-      { match: on('POST', '/api/chat/token/revoke'), respond: () => empty(204) },
-    ]);
-    const reasons: string[] = [];
-    const off = onSignOut((r) => reasons.push(r));
+  it('localeHref swaps only the locale segment of basePath and keeps the sub-route', () => {
+    expect(localeHref('/es/chat', '/es/chat/kb/x', 'en')).toBe('/en/chat/kb/x');
+    expect(localeHref('/en/chat', '/en/chat', 'es')).toBe('/es/chat');
+    expect(localeHref('/en/chat', '/en/chat', 'en')).toBeNull();
+    expect(localeHref('/chat', '/chat/settings', 'en')).toBeNull();
+  });
+
+  it('Sign out is a link to the studio signOutHref with a tooltip, no API call (TS-399, TS-434)', async () => {
+    const { calls } = mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json(me) }]);
     renderApp(<Settings />, { language: 'es' });
     await screen.findByText('Ana · ana@tenant.test');
-    const button = screen.getByTestId('sign-out');
-    expect(button).toHaveAttribute('aria-describedby');
-    await userEvent.setup().dblClick(button);
-    await waitFor(() => expect(reasons).toEqual(['self']));
-    const revoke = calls.filter((c) => c.url.endsWith('/api/chat/token/revoke'));
-    expect(revoke).toHaveLength(1);
-    expect(headerOf(revoke[0]!.init, 'authorization')).toBe('Bearer dct_chat_me');
-    expect(await getToken()).toBeNull();
-    expect(getPrefs()).toEqual({ language: 'es' });
-    off();
+    const link = screen.getByTestId('sign-out');
+    expect(link.tagName).toBe('A');
+    expect(link).toHaveAttribute('href', HOST.signOutHref);
+    expect(link).toHaveTextContent('Cerrar sesión');
+    act(() => link.focus());
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/sesión del estudio/i);
+    expect(calls.filter((c) => c.init.method === 'POST')).toHaveLength(0);
   });
 
-  it('still clears locally when the revoke call fails', async () => {
-    mockFetch([
-      { match: on('GET', '/api/chat/me'), respond: () => json(me) },
-      { match: on('POST', '/api/chat/token/revoke'), respond: () => json({ error: 'unknown' }, 500) },
-    ]);
-    const reasons: string[] = [];
-    const off = onSignOut((r) => reasons.push(r));
+  it('a failed /me (not 401, not disabled) shows the account error', async () => {
+    mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json({ error: 'unknown' }, 500) }]);
     renderApp(<Settings />);
-    await screen.findByText('Ana · ana@tenant.test');
-    await userEvent.setup().click(screen.getByTestId('sign-out'));
-    await waitFor(() => expect(reasons).toEqual(['self']));
-    expect(await getToken()).toBeNull();
-    off();
+    expect(await screen.findByRole('alert')).toHaveTextContent(/could not be loaded/i);
   });
 });

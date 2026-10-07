@@ -62,14 +62,14 @@ function ToastViewport() {
           className={`pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-lg border px-3 py-2 text-sm shadow-lg ${
             t.kind === 'error'
               ? 'border-destructive/40 bg-card text-destructive'
-              : 'border-border bg-card text-cardForeground'
+              : 'border-border bg-card text-card-foreground'
           }`}
         >
           <span className="flex-1">{t.message}</span>
           {t.action && (
             <button
               type="button"
-              className="min-h-touch rounded-md px-3 font-medium text-primary underline-offset-2 hover:underline"
+              className="min-h-[44px] rounded-md px-3 font-medium text-primary underline-offset-2 hover:underline"
               onClick={() => {
                 t.action?.onClick();
                 dismiss(t.id);

@@ -4,7 +4,7 @@ import { cleanup } from '@testing-library/react';
 
 // Node ≥ 22 exposes a native `localStorage` that, without --localstorage-file, is an
 // object with no methods and shadows jsdom's. Replace it with an in-memory Storage so
-// the suite behaves the same on Node 20 (CI / image) and on a newer local Node.
+// the suite behaves the same on Node 20 (CI) and on a newer local Node.
 if (typeof (globalThis as { localStorage?: { clear?: unknown } }).localStorage?.clear !== 'function') {
   class MemoryStorage {
     #m = new Map<string, string>();
@@ -32,12 +32,11 @@ if (typeof (globalThis as { localStorage?: { clear?: unknown } }).localStorage?.
   Object.defineProperty(globalThis, 'sessionStorage', { value: new MemoryStorage(), configurable: true, writable: true });
 }
 
-// Every test starts without a token, without prefs and without a runtime config.
+// Every test starts without prefs and at the chat's base path.
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
-  delete (window as unknown as { __DOCTILING_CHAT__?: unknown }).__DOCTILING_CHAT__;
-  window.history.replaceState(null, '', '/');
+  window.history.replaceState(null, '', '/es/chat');
 });
 
 afterEach(() => {
@@ -46,7 +45,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// jsdom gaps that Radix Dialog and the screens touch.
+// jsdom gaps that Radix (Dialog, Tooltip) and the screens touch.
 if (!('ResizeObserver' in window)) {
   class RO {
     observe() {}

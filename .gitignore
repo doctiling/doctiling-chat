@@ -1,8 +1,10 @@
 node_modules/
-dist/
 coverage/
 .env
 .env.*
 .gate-dirty
 .DS_Store
+# symlink to the doctiling-web design system (scripts/link-ui.sh)
+.ui
+# npm pack output (local install into a sibling host while a tag is not pushed yet)
 *.tgz

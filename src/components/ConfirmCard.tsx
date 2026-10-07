@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { ShieldAlert } from 'lucide-react';
-import { Button } from './Button';
-import { Tooltip } from './Tooltip';
-import { hasKey } from '@/i18n';
-import { useLanguage } from '@/i18n/use-language';
-import type { Pending } from '@/lib/api';
+import { Button } from '@doctiling/ui/atoms/button';
+import { SimpleTooltip } from '@doctiling/ui/molecules/tooltip';
+import { hasKey } from '../i18n';
+import { useLanguage } from '../i18n/use-language';
+import type { Pending } from '../lib/api';
 
 type Props = {
   pending: Pending;
@@ -38,7 +38,7 @@ export function ConfirmCard({ pending, onResolve, disabled = false }: Props) {
   return (
     <section
       data-testid="confirm-card"
-      className="rounded-xl border border-destructive/40 bg-card p-4 text-cardForeground shadow-sm"
+      className="rounded-xl border border-destructive/40 bg-card p-4 text-card-foreground shadow-sm"
       aria-labelledby={`confirm-${pending.id}`}
     >
       <div className="flex items-start gap-3">
@@ -47,20 +47,34 @@ export function ConfirmCard({ pending, onResolve, disabled = false }: Props) {
           <h3 id={`confirm-${pending.id}`} className="font-medium">
             {t('conversation.confirm.title')}
           </h3>
-          <p className="mt-1 text-sm text-mutedForeground">{t(summaryKeyFor(pending, language), values)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t(summaryKeyFor(pending, language), values)}</p>
         </div>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <Tooltip label={t('conversation.confirm.rejectHint')}>
-          <Button variant="secondary" full disabled={disabled} pending={pendingChoice === 'reject'} onClick={() => void resolve(false)}>
+        <SimpleTooltip label={t('conversation.confirm.rejectHint')}>
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full px-4"
+            disabled={disabled || pendingChoice !== null}
+            aria-busy={pendingChoice === 'reject' || undefined}
+            onClick={() => void resolve(false)}
+          >
             {t('conversation.confirm.reject')}
           </Button>
-        </Tooltip>
-        <Tooltip label={t('conversation.confirm.approveHint')}>
-          <Button variant="destructive" full disabled={disabled} pending={pendingChoice === 'approve'} onClick={() => void resolve(true)}>
+        </SimpleTooltip>
+        <SimpleTooltip label={t('conversation.confirm.approveHint')}>
+          <Button
+            variant="destructive"
+            size="lg"
+            className="w-full px-4"
+            disabled={disabled || pendingChoice !== null}
+            aria-busy={pendingChoice === 'approve' || undefined}
+            onClick={() => void resolve(true)}
+          >
             {t('conversation.confirm.approve')}
           </Button>
-        </Tooltip>
+        </SimpleTooltip>
       </div>
     </section>
   );

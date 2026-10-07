@@ -1,79 +1,69 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { api, ApiError, apiFetch, onSignOut, readNdjson } from '@/lib/api';
-import { getToken } from '@/lib/storage';
-import { API, headerOf, json, mockFetch, ndjson, on, seedToken, setConfig } from '../helpers/render';
+import { describe, expect, it, vi } from 'vitest';
+import { ApiError, createChatApi, readNdjson, signInUrl } from '../../src/lib/api';
+import { API, headerOf, json, mockFetch, ndjson, notEnabled, on } from '../helpers/render';
 
-// T057 — bearer header, any 401 → signOut, NDJSON reader with partial lines, AbortController. [TS-389, TS-399, TS-411]
+const make = (over: Partial<Parameters<typeof createChatApi>[0]> = {}) =>
+  createChatApi({ apiBase: API, signInHref: '/es/signin', navigateTo: vi.fn(), ...over });
+
+// T057 — same-origin fetch with the session cookie, 401 → studio sign-in with return URL,
+// bare 404 → chat disabled, NDJSON reader with partial lines, AbortController. [TS-389, TS-399, TS-411]
 describe('api (T057)', () => {
-  beforeEach(() => setConfig());
-
-  it('sends Authorization: Bearer <token> against the configured origin (TS-399)', async () => {
-    const token = seedToken('dct_chat_abc123');
+  it('calls `${apiBase}${path}` with credentials and no bearer (TS-399)', async () => {
     const { calls } = mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json({ email: 'ana@tenant.test' }) }]);
-    const me = await api.me();
+    const me = await make().me();
     expect(me.email).toBe('ana@tenant.test');
     expect(calls[0]?.url).toBe(`${API}/api/chat/me`);
-    expect(headerOf(calls[0]!.init, 'authorization')).toBe(`Bearer ${token}`);
+    expect(calls[0]?.init.credentials).toBe('same-origin');
+    expect(headerOf(calls[0]!.init, 'authorization')).toBeNull();
   });
 
-  it('any 401 clears the token and notifies sign-out with the server reason (TS-389)', async () => {
-    seedToken();
-    mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json({ error: 'revoked', messageKey: 'x' }, 401) }]);
-    const seen: string[] = [];
-    const off = onSignOut((r) => seen.push(r));
-    await expect(api.me()).rejects.toMatchObject({ status: 401, code: 'revoked' });
-    expect(seen).toEqual(['revoked']);
-    expect(await getToken()).toBeNull();
-    off();
+  it('a 401 sends the person to the studio sign-in with the current path as callbackUrl (TS-389)', async () => {
+    window.history.replaceState(null, '', '/es/chat/kb/kb-pol?x=1');
+    mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json({ error: 'unauthenticated' }, 401) }]);
+    const navigateTo = vi.fn();
+    await expect(make({ navigateTo }).me()).rejects.toMatchObject({ status: 401, code: 'unauthenticated' });
+    expect(navigateTo).toHaveBeenCalledWith(`/es/signin?callbackUrl=${encodeURIComponent('/es/chat/kb/kb-pol?x=1')}`);
   });
 
-  it('a 401 with an unknown body still signs out as invalid', async () => {
-    seedToken();
-    mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => new Response('nope', { status: 401 }) }]);
-    const seen: string[] = [];
-    const off = onSignOut((r) => seen.push(r));
-    await expect(api.me()).rejects.toBeInstanceOf(ApiError);
-    expect(seen).toEqual(['invalid']);
-    off();
+  it('signInUrl appends with & when the sign-in href already has a query', () => {
+    expect(signInUrl('/es/signin?from=chat', '/es/chat')).toBe('/es/signin?from=chat&callbackUrl=%2Fes%2Fchat');
   });
 
-  it('without a stored token an authenticated call signs out instead of calling the server', async () => {
-    const { calls } = mockFetch([]);
-    const seen: string[] = [];
-    const off = onSignOut((r) => seen.push(r));
-    await expect(api.knowledgeBases()).rejects.toMatchObject({ status: 401 });
-    expect(calls).toHaveLength(0);
-    expect(seen).toEqual(['invalid']);
-    off();
+  it('a bare 404 on /api/chat/* means the chat is disabled: onDisabled once, code chat_disabled (FR-027)', async () => {
+    mockFetch([{ match: on('GET', '/api/chat/me'), respond: notEnabled }, { match: on('GET', '/api/chat/knowledge-bases'), respond: notEnabled }]);
+    const onDisabled = vi.fn();
+    const api = make({ onDisabled });
+    await expect(api.me()).rejects.toMatchObject({ status: 404, code: 'chat_disabled' });
+    await expect(api.knowledgeBases()).rejects.toMatchObject({ status: 404, code: 'chat_disabled' });
+    expect(onDisabled).toHaveBeenCalledTimes(1);
   });
 
-  it('maps a 404 without body to chat_disabled and keeps other codes', async () => {
-    seedToken();
+  it('a 404 WITH an error body is an ordinary not-found, and other codes are kept', async () => {
     mockFetch([
-      { match: on('GET', '/api/chat/me'), respond: () => new Response(null, { status: 404 }) },
+      { match: on('GET', /\/documents\/gone$/), respond: () => json({ error: 'not_found' }, 404) },
       { match: on('POST', /\/agent$/), respond: () => json({ error: 'runInProgress', messageKey: 'k' }, 409) },
     ]);
-    await expect(api.me()).rejects.toMatchObject({ status: 404, code: 'chat_disabled' });
+    const onDisabled = vi.fn();
+    const api = make({ onDisabled });
+    await expect(api.document('kb1', 'gone')).rejects.toMatchObject({ status: 404, code: 'not_found' });
     await expect(api.agent('kb1', { query: 'x' }, new AbortController().signal)).rejects.toMatchObject({ status: 409, code: 'runInProgress' });
+    expect(onDisabled).not.toHaveBeenCalled();
   });
 
   it('turns fetch failures into network / aborted errors', async () => {
-    seedToken();
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
-    await expect(api.me()).rejects.toMatchObject({ code: 'network' });
+    await expect(make().me()).rejects.toMatchObject({ code: 'network' });
     vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(Object.assign(new Error('x'), { name: 'AbortError' }))));
-    await expect(api.me()).rejects.toMatchObject({ code: 'aborted' });
+    await expect(make().me()).rejects.toMatchObject({ code: 'aborted' });
   });
 
-  it('auth:false never attaches a bearer and does not sign out on 401', async () => {
-    const { calls } = mockFetch([{ match: on('POST', '/api/chat/token'), respond: () => json({ error: 'invalid_code' }, 400) }]);
-    const seen: string[] = [];
-    const off = onSignOut((r) => seen.push(r));
-    await expect(apiFetch('/api/chat/token', { auth: false, method: 'POST', body: '{}' })).rejects.toMatchObject({ code: 'invalid_code' });
-    expect(headerOf(calls[0]!.init, 'authorization')).toBeNull();
-    expect(headerOf(calls[0]!.init, 'content-type')).toBe('application/json');
-    expect(seen).toEqual([]);
-    off();
+  it('sets Content-Type for JSON bodies and throws ApiError instances', async () => {
+    const { calls } = mockFetch([{ match: on('POST', /\/session\/clear$/), respond: () => json({ error: 'runInProgress' }, 409) }]);
+    const err = await make().clearSession('kb1').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(headerOf(calls[0]!.init, 'content-type')).toBeNull();
+    mockFetch([{ match: on('POST', /\/agent$/), respond: () => ndjson([{ status: 'Done', role: 'system' }]) }]);
+    await make().agent('kb1', { query: 'hi' }, new AbortController().signal);
   });
 
   it('readNdjson parses lines split across chunks and ignores blank or malformed lines (TS-411)', async () => {
@@ -89,12 +79,12 @@ describe('api (T057)', () => {
     expect(out2).toEqual([{ a: 1 }, { b: 2 }]);
   });
 
-  it('propagates the AbortSignal to fetch', async () => {
-    seedToken();
+  it('propagates the AbortSignal and the JSON body to fetch', async () => {
     const { calls } = mockFetch([{ match: on('POST', /\/agent$/), respond: () => ndjson([{ status: 'Done', role: 'system' }]) }]);
     const controller = new AbortController();
-    await api.agent('kb1', { query: 'hi' }, controller.signal);
+    await make().agent('kb1', { query: 'hi' }, controller.signal);
     expect(calls[0]!.init.signal).toBe(controller.signal);
     expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ query: 'hi' });
+    expect(headerOf(calls[0]!.init, 'content-type')).toBe('application/json');
   });
 });

@@ -1,31 +1,29 @@
 import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { act, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { IconButton } from '@/components/IconButton';
+import { IconButton } from '../../src/components/IconButton';
 import { renderApp } from '../helpers/render';
 
 const root = path.resolve(__dirname, '../..');
 
-// T074 — every icon control has a label (accessible name + tooltip); native title= is banned by lint. [TS-447]
+// T074 — every icon control has a label (accessible name + design-system tooltip); native title= is banned by lint. [TS-447]
 describe('IconButton (T074, TS-447)', () => {
-  it('exposes the label as accessible name and as a tooltip, with a 44px target', async () => {
+  it('exposes the label as accessible name and as a SimpleTooltip on focus, with a 44px target', async () => {
     renderApp(
       <IconButton label="Refresh the list" onClick={() => {}}>
         <svg aria-hidden="true" />
       </IconButton>,
     );
     const button = screen.getByRole('button', { name: 'Refresh the list' });
-    expect(button.className).toMatch(/min-h-touch/);
-    expect(button.className).toMatch(/min-w-touch/);
-    const tooltip = screen.getByRole('tooltip');
+    expect(button.className).toMatch(/min-h-\[44px\]/);
+    expect(button.className).toMatch(/min-w-\[44px\]/);
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    act(() => button.focus());
+    const tooltip = await screen.findByRole('tooltip');
     expect(tooltip).toHaveTextContent('Refresh the list');
     expect(button).toHaveAttribute('aria-describedby', tooltip.id);
-    expect(tooltip).toHaveAttribute('data-state', 'closed');
-    await userEvent.setup().hover(button);
-    expect(tooltip).toHaveAttribute('data-state', 'open');
   });
 
   it('every <IconButton> in the source tree receives a label and no JSX uses a native title=', () => {
@@ -55,8 +53,8 @@ describe('IconButton (T074, TS-447)', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('the lint rule itself bites a title= attribute and an unlabeled IconButton', () => {
-    const bad = `import * as React from 'react';\nimport { IconButton } from '@/components/IconButton';\nexport function Bad() { return <div><span title="x">a</span><IconButton onClick={() => {}}><i /></IconButton></div>; }\n`;
+  it('the lint rule itself bites a title= attribute, an unlabeled IconButton, a Next import and a @/ import', () => {
+    const bad = `import * as React from 'react';\nimport Link from 'next/link';\nimport { x } from '@/lib/x';\nimport { IconButton } from './IconButton';\nexport function Bad() { return <div><span title="x">a</span><IconButton onClick={() => {}}><i /></IconButton><Link href={x} /></div>; }\n`;
     const tmp = path.join(root, 'src', 'components', '__lint_sample__.tsx');
     writeFileSync(tmp, bad);
     try {
@@ -68,6 +66,8 @@ describe('IconButton (T074, TS-447)', () => {
       }
       expect(output).toMatch(/Native title= is not a tooltip/);
       expect(output).toMatch(/<IconButton> needs a `label`/);
+      expect(output).toMatch(/never imports Next\.js/);
+      expect(output).toMatch(/No `@\/` alias here/);
     } finally {
       rmSync(tmp, { force: true });
     }

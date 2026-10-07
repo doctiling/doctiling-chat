@@ -1,14 +1,14 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { OfflineBanner } from '@/components/OfflineBanner';
-import { UpdateToast } from '@/components/UpdateToast';
-import { reportNetworkFailure, reportNetworkSuccess } from '@/lib/online';
-import { registerServiceWorker } from '@/lib/sw-register';
+import { OfflineBanner } from '../../src/components/OfflineBanner';
+import { UpdateToast } from '../../src/components/UpdateToast';
+import { reportNetworkFailure, reportNetworkSuccess } from '../../src/lib/online';
+import { registerServiceWorker } from '../../src/lib/sw-register';
 import { renderApp } from '../helpers/render';
 
 // T071 — OfflineBanner (navigator.onLine + fetch failures, Retry) and the update flow
-// (waiting worker → toast → SKIP_WAITING → reload, token untouched). [TS-398, TS-401]
+// (waiting worker under basePath → toast → SKIP_WAITING → reload, prefs untouched). [TS-398, TS-401]
 describe('OfflineBanner (T071, TS-398)', () => {
   afterEach(() => {
     reportNetworkSuccess();
@@ -52,15 +52,13 @@ describe('Update flow (T071, TS-401)', () => {
       ...navigator,
       serviceWorker: { register, controller: {}, addEventListener: (t: string, fn: () => void) => (swListeners[t] = fn) },
     });
-    vi.stubEnv('DEV', false);
     const onUpdate = vi.fn();
-    await registerServiceWorker({ onUpdate });
-    expect(register).toHaveBeenCalledWith('/sw.js', { scope: '/' });
+    await registerServiceWorker({ onUpdate, url: '/es/chat/sw.js', scope: '/es/chat/' });
+    expect(register).toHaveBeenCalledWith('/es/chat/sw.js', { scope: '/es/chat/' });
     expect(onUpdate).toHaveBeenCalledTimes(1);
     expect(waiting.postMessage).not.toHaveBeenCalled();
     onUpdate.mock.calls[0]![0].apply();
     expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
-    vi.unstubAllEnvs();
   });
 
   it('UpdateToast shows the sticky toast with the Update action', async () => {
@@ -69,13 +67,11 @@ describe('Update flow (T071, TS-401)', () => {
       ...navigator,
       serviceWorker: { register: vi.fn(async () => ({ waiting, installing: null, addEventListener: vi.fn() })), controller: {}, addEventListener: vi.fn() },
     });
-    vi.stubEnv('DEV', false);
-    window.localStorage.setItem('doctiling-chat:token', JSON.stringify({ token: 'keep-me' }));
+    window.localStorage.setItem('doctiling-chat:prefs', JSON.stringify({ lastKbId: 'keep-me' }));
     renderApp(<UpdateToast />);
     expect(await screen.findByRole('status')).toHaveTextContent('A new version is ready.');
     await userEvent.setup().click(screen.getByRole('button', { name: 'Update' }));
     expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
-    expect(window.localStorage.getItem('doctiling-chat:token')).toContain('keep-me');
-    vi.unstubAllEnvs();
+    expect(window.localStorage.getItem('doctiling-chat:prefs')).toContain('keep-me');
   });
 });

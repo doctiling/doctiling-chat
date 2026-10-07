@@ -1,8 +1,8 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { Conversation } from '@/screens/Conversation';
-import { empty, json, mockFetch, on, renderApp, seedToken, setConfig } from '../helpers/render';
+import { describe, expect, it } from 'vitest';
+import { Conversation } from '../../src/screens/Conversation';
+import { empty, json, mockFetch, on, renderApp } from '../helpers/render';
 
 const turns = [
   { id: 'u1', role: 'user', content: 'hello' },
@@ -11,10 +11,6 @@ const turns = [
 
 // T066 — "Clear conversation" with local confirmation → POST …/session/clear → empty list. [TS-412, TS-432]
 describe('Conversation clear (T066)', () => {
-  beforeEach(() => {
-    setConfig();
-    seedToken();
-  });
 
   it('asks locally, then clears on the server and empties the list (TS-412)', async () => {
     const { calls } = mockFetch([

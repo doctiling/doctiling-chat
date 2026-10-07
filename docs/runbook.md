@@ -2,37 +2,41 @@
 
 ## What runs where
 
-One image (`ghcr.io/doctiling/chat:<version>`) for every tenant; `server/serve.mjs` serves `dist/` on `PORT`
-(8080) and injects the tenant's configuration at start. The CLI (`doctiling tenant chat enable`) creates the
-Railway service with `DOCTILING_API_ORIGIN=https://<studio host>`, `DOCTILING_CHAT_HOST=<chat host>`,
-`PORT=8080`, `NODE_ENV=production`, and sets `DOCTILING_CHAT_HOST` on the tenant's **web** service, which is
-what switches the API on.
+Nothing of its own. The chat is a package (`@doctiling/chat`, pinned by tag) compiled into the tenant's
+**web** service (studio edition) and served at `https://<studio host>/{locale}/chat`. It is switched on per
+tenant with the variable `DOCTILING_CHAT_ENABLED=true` on the web service
+(`doctiling tenant chat enable <name> --yes`; `disable` removes it; both redeploy). Never in self-host or
+the local profile. No chat domain, no image, no registry.
 
 ## Health
 
-- `GET https://<chat host>/health` → `{"status":"ok","version":"X.Y.Z"}`.
-- `GET https://<studio host>/api/chat/me` without a token → `401 {"error":"invalid"}` means the API is on;
-  `404` means `DOCTILING_CHAT_HOST` is not set on the web service.
+- `GET https://<studio host>/{locale}/chat` → `200` (session) or a redirect to `signin` means the route is
+  mounted; `404` means the flag is off (or the web release predates the chat).
+- `GET https://<studio host>/api/chat/me` → `401` without a session means the API is on; `404` (empty body)
+  means `DOCTILING_CHAT_ENABLED` is not set.
+- `GET https://<studio host>/{locale}/chat/sw.js` → `Cache-Control: no-store`, body starts with
+  `/* Doctiling Chat service worker <version>`.
+- `doctiling tenant check <name>` shows `chat: enabled/disabled` and checks the route.
 
 ## Symptoms
 
 | Symptom | Likely cause | Check |
 |---|---|---|
-| Service exits at start | `DOCTILING_API_ORIGIN` missing or not an origin | service logs: `doctiling-chat: DOCTILING_API_ORIGIN is required` |
-| "The chat is not enabled for this organisation" after Connect | web has no `DOCTILING_CHAT_HOST`, or it differs from the chat's host | `curl -i https://<studio>/api/chat/me` → 404 |
-| Browser console: CORS error on `/api/chat/*` | `DOCTILING_CHAT_HOST` on web ≠ host the person opened | compare `Access-Control-Allow-Origin` with the page origin |
-| Browser console: CSP `connect-src` violation | `DOCTILING_API_ORIGIN` of the chat service ≠ studio origin | `curl -I https://<chat>/` → `Content-Security-Policy` |
-| Everyone signed out at once | web rotated `chat_host` (tokens are bound to it) or members were revoked | studio security log: `chat_disconnected` |
-| "Update" toast never appears | `/sw.js` cached by a proxy | `curl -I https://<chat>/sw.js` → must be `Cache-Control: no-store` |
-| iOS opens the callback in Safari, app still asks to connect | known iOS behaviour (plan § Risks) | tap "Open in the app" on the callback page, connect again from the installed app |
+| "The chat is not enabled here" | web has no `DOCTILING_CHAT_ENABLED`, or self-host/local profile | `curl -i https://<studio>/api/chat/me` → 404 empty |
+| Opening the chat bounces to sign-in in a loop | the studio session cookie is not sent (different host than the studio's, third-party cookie block) | open the chat from the studio host itself |
+| Styles missing (unstyled list, no bubbles) | web's Tailwind `content` lacks the chat glob, or `@doctiling/chat/styles.css` is not imported | `tailwind.config.ts`, `(chat)/layout.tsx` |
+| "Update" toast never appears | `/{locale}/chat/sw.js` cached by a proxy, or `version` not bumped | `curl -I …/sw.js` → must be `no-store`; body version |
+| Installed app opens the studio instead of the chat | manifest `scope`/`start_url` wrong | `curl …/chat/manifest.webmanifest` → `scope` = `/{locale}/chat/` |
+| Offline opens a blank page instead of the notice | `offline.html` route missing or not precached | `curl …/{locale}/chat/offline.html` → 200 |
 
 ## Release
 
 1. Bump `version` in `package.json` (same commit as the change). `npm run gate` green.
-2. Tag `vX.Y.Z`, push the tag. `release.yml` runs the gate, builds, pushes `ghcr.io/doctiling/chat:X.Y.Z` + `:latest`, verifies the pull.
-3. Roll a tenant: `doctiling tenant deploy <tenant> --chat` (pins the new image on the chat service).
+2. Tag `vX.Y.Z`, push the tag. `release.yml` runs the gate and checks the tag against `version`.
+3. In web: `npx -y npm@10.8.2 install @doctiling/chat@https://codeload.github.com/doctiling/doctiling-chat/tar.gz/refs/tags/vX.Y.Z`,
+   release web, `doctiling-ops deploy --tenant <name> --ref <web tag>`.
 
 ## Rollback
 
-`doctiling tenant deploy <tenant> --chat --image ghcr.io/doctiling/chat:<previous>`; the installed app offers
-"Update" on next open and reloads without touching the token.
+Pin the previous tag in web and redeploy web; the installed app offers "Update" on next open and reloads
+(the studio session is untouched). Switching the chat off without a release: `doctiling tenant chat disable <name>`.

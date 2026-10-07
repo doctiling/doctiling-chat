@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { parseMarkdown, type Block, type Inline } from '@/lib/markdown';
+import { parseMarkdown, type Block, type Inline } from '../lib/markdown';
 
 type Props = {
   markdown: string;
