@@ -118,10 +118,13 @@ export function renderApp(ui: React.ReactElement, { language = 'en', host = {}, 
 
 /** A GET …/session mock whose turns follow what the agent mock appends (the server persists turns). */
 export function sessionStore(initial: unknown[] = [], extra: Record<string, unknown> = {}) {
-  const state = { turns: [...initial], pending: null as unknown, isRunning: false, ...extra };
+  const state = { turns: [...initial], pending: null as unknown, isRunning: false, access: undefined as unknown, ...extra };
   return {
     state,
-    route: (): Route => ({ match: on('GET', /\/session$/), respond: () => json({ turns: state.turns, actions: [], pending: state.pending, isRunning: state.isRunning }) }),
+    route: (): Route => ({
+      match: on('GET', /\/session$/),
+      respond: () => json({ turns: state.turns, actions: [], pending: state.pending, isRunning: state.isRunning, access: state.access }),
+    }),
     append: (...turns: unknown[]) => state.turns.push(...turns),
   };
 }

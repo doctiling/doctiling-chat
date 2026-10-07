@@ -87,4 +87,17 @@ describe('api (T057)', () => {
     expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ query: 'hi' });
     expect(headerOf(calls[0]!.init, 'content-type')).toBe('application/json');
   });
+
+  it('[TS-461][TS-462] GET …/documents lists the base; referencedDocumentIds travel next to the query', async () => {
+    const { calls } = mockFetch([
+      { match: on('GET', /\/documents$/), respond: () => json({ items: [{ id: 'd1', title: 'T', type: 'text', visibility: 'shared', indexed: true }] }) },
+      { match: on('POST', /\/agent$/), respond: () => ndjson([{ status: 'Done', role: 'system' }]) },
+    ]);
+    const api = make();
+    const { items } = await api.documents('kb 1');
+    expect(items).toHaveLength(1);
+    expect(calls[0]!.url).toBe(`${API}/api/chat/knowledge-bases/kb%201/documents`);
+    await api.agent('kb1', { query: 'hi', referencedDocumentIds: ['d1', 'd2'] }, new AbortController().signal);
+    expect(JSON.parse(String(calls[1]!.init.body))).toEqual({ query: 'hi', referencedDocumentIds: ['d1', 'd2'] });
+  });
 });

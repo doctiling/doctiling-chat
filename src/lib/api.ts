@@ -94,6 +94,9 @@ export type KnowledgeBaseItem = {
 
 export type Activity = { toolName: string; labelKey: string; target?: string };
 
+/** A document the person pointed the question at with `@` (client-side only: the server keeps `content` = the query). */
+export type TurnReference = { id: string; title: string };
+
 export type Turn = {
   id: string;
   role: 'user' | 'agent';
@@ -101,6 +104,8 @@ export type Turn = {
   activity?: Activity[];
   timestamp?: string;
   createdAt?: string;
+  /** Mentions shown as tags under a user turn; never sent back, never persisted here. */
+  references?: TurnReference[];
 };
 
 export type Pending = {
@@ -112,12 +117,19 @@ export type Pending = {
   createdAt?: string;
 };
 
+/** What the server decided about the person on this base; the client only shows it (never pre-decides). */
+export type SessionAccess = {
+  role: 'owner' | 'admin' | 'collaborator' | 'reader';
+  canWrite: boolean;
+};
+
 export type SessionView = {
   turns: Turn[];
   actions: unknown[];
   pending: Pending | null;
   isRunning: boolean;
   config?: unknown;
+  access?: SessionAccess;
 };
 
 export type AgentEvent = {
@@ -139,7 +151,20 @@ export type DocumentView = {
   updatedAt: number | null;
 };
 
-export type AgentBody = { query: string } | { resume: { pendingId: string; approved: boolean } };
+/** One row of GET …/documents: only what the person may read, variants flattened under `parentTitle`. */
+export type DocumentListItem = {
+  id: string;
+  title: string;
+  type: 'text' | 'database' | 'graph';
+  visibility: 'shared' | 'private';
+  parentTitle?: string;
+  indexed: boolean;
+};
+
+/** Upper bound of `referencedDocumentIds` per question (the server enforces the same). */
+export const MAX_REFERENCES = 10;
+
+export type AgentBody = { query: string; referencedDocumentIds?: string[] } | { resume: { pendingId: string; approved: boolean } };
 
 export type ChatApi = {
   fetch: (path: string, init?: RequestInit) => Promise<Response>;
@@ -148,6 +173,7 @@ export type ChatApi = {
   session: (kbId: string) => Promise<SessionView>;
   clearSession: (kbId: string) => Promise<Response>;
   document: (kbId: string, docId: string) => Promise<DocumentView>;
+  documents: (kbId: string) => Promise<{ items: DocumentListItem[] }>;
   /** NDJSON stream; the caller iterates with readNdjson and aborts with the signal. */
   agent: (kbId: string, body: AgentBody, signal: AbortSignal) => Promise<Response>;
 };
@@ -205,6 +231,7 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
     session: (kbId) => apiJson<SessionView>(`${kb(kbId)}/session`),
     clearSession: (kbId) => apiFetch(`${kb(kbId)}/session/clear`, { method: 'POST' }),
     document: (kbId, docId) => apiJson<DocumentView>(`${kb(kbId)}/documents/${encodeURIComponent(docId)}`),
+    documents: (kbId) => apiJson<{ items: DocumentListItem[] }>(`${kb(kbId)}/documents`),
     agent: (kbId, body, signal) => apiFetch(`${kb(kbId)}/agent`, { method: 'POST', body: JSON.stringify(body), signal }),
   };
 }

@@ -1,4 +1,4 @@
-// Minimal history router under the host's basePath (e.g. /es/chat): five
+// Minimal history router under the host's basePath (e.g. /es/chat): six
 // routes and no need for a library. The host (Next) serves every path under
 // basePath with the same page; this router decides what the page shows.
 import * as React from 'react';
@@ -6,6 +6,7 @@ import * as React from 'react';
 export type Route =
   | { name: 'kbs' }
   | { name: 'conversation'; kbId: string; docId?: string }
+  | { name: 'documents'; kbId: string }
   | { name: 'settings' }
   | { name: 'offline' };
 
@@ -27,6 +28,7 @@ export function parseRoute(pathname: string, basePath = ''): Route {
   if (parts[0] === 'kb') {
     if (!parts[1]) return { name: 'kbs' };
     if (parts[2] === 'doc' && parts[3]) return { name: 'conversation', kbId: parts[1], docId: parts[3] };
+    if (parts[2] === 'docs') return { name: 'documents', kbId: parts[1] };
     return { name: 'conversation', kbId: parts[1] };
   }
   if (parts[0] === 'settings') return { name: 'settings' };
@@ -38,6 +40,7 @@ export type Paths = {
   kbs: () => string;
   conversation: (kbId: string) => string;
   document: (kbId: string, docId: string) => string;
+  documents: (kbId: string) => string;
   settings: () => string;
   offline: () => string;
 };
@@ -48,6 +51,7 @@ export function makePaths(basePath: string): Paths {
     kbs: () => `${base}/kb`,
     conversation: (kbId: string) => `${base}/kb/${encodeURIComponent(kbId)}`,
     document: (kbId: string, docId: string) => `${base}/kb/${encodeURIComponent(kbId)}/doc/${encodeURIComponent(docId)}`,
+    documents: (kbId: string) => `${base}/kb/${encodeURIComponent(kbId)}/docs`,
     settings: () => `${base}/settings`,
     offline: () => `${base}/offline`,
   };

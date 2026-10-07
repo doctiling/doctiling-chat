@@ -40,7 +40,7 @@
       "body": "The messages disappear here and in the studio. The record of applied actions is kept.",
       "confirm": "Clear"
     },
-    "readOnly": "Your access is read-only: the agent can answer, not modify.",
+    "readOnly": "Your access to this base is read-only: the agent can read and search it, not change it.",
     "empty": "Ask anything about this knowledge base. The agent searches every document you can see and cites its sources.",
     "you": "You",
     "agent": "Agent",
@@ -108,7 +108,10 @@
       "sendFailed": "The request could not be sent.",
       "clearFailed": "The conversation could not be cleared while a request is running.",
       "unknown": "Something went wrong. Try again."
-    }
+    },
+    "readOnlyBadge": "Read-only",
+    "placeholderReadOnly": "Ask this knowledge base (read-only)…",
+    "mentionHint": "Type @ to point the question at a document."
   },
   "sourceSheet": {
     "title": "Source",
@@ -172,5 +175,23 @@
     "enterHint": "Enter sends · Shift+Enter adds a line",
     "sourcePanel": "Source",
     "closeSource": "Close the source"
+  },
+  "documents": {
+    "title": "Documents",
+    "close": "Hide the documents",
+    "filter": "Filter documents…",
+    "empty": "There are no documents you can read in this base yet.",
+    "noMatch": "No document matches \"{query}\".",
+    "forbidden": "Your access to this base does not allow listing its documents.",
+    "failed": "The documents could not be loaded.",
+    "private": "Private",
+    "notIndexed": "Not indexed yet"
+  },
+  "mentions": {
+    "picker": "Documents to reference",
+    "noMatch": "No document matches.",
+    "remove": "Remove the reference to {title}",
+    "references": "Referenced documents",
+    "limit": "You can reference up to {max} documents per question."
   }
 }

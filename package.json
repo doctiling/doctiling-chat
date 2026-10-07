@@ -1,6 +1,6 @@
 {
   "name": "@doctiling/chat",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Doctiling Chat: the mobile-first, installable chat of a tenant, as a React package compiled into the studio (doctiling-web, spec 045). Pure client: no business rules live here.",
   "type": "module",
   "main": "src/index.ts",
