@@ -201,10 +201,15 @@ export function Conversation({ kbId, docId, kbName }: Props) {
   const hrefFor = React.useCallback((id: string) => paths.document(kbId, id), [paths, kbId]);
   const openDoc = React.useCallback((href: string) => navigate(href), []);
 
+  // One column on a phone. From md the conversation column (header, turns,
+  // composer) sits next to the source panel when a document is open; the
+  // content is centred at ~760 px so long answers stay readable on wide screens.
   return (
     <main className="app-shell">
-      <header className="flex items-center gap-1 border-b border-border px-2 py-1.5">
-        <IconButton label={t('app.back')} onClick={() => navigate(paths.kbs())}>
+      <div className="flex min-h-0 flex-1 flex-row">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <header className="flex items-center gap-1 border-b border-border px-2 py-1.5 md:px-4">
+        <IconButton label={t('app.back')} onClick={() => navigate(paths.kbs())} className="md:hidden">
           <ArrowLeft strokeWidth={1.75} />
         </IconButton>
         <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{resolvedName ?? t('kb.title')}</h1>
@@ -214,6 +219,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
       </header>
       <OfflineBanner onRetry={() => void load()} />
       <div className="scroll-area" ref={listRef}>
+        <div className="mx-auto w-full md:max-w-[760px]">
         {!loaded && (
           <p role="status" className="px-4 py-8 text-center text-muted-foreground">
             {t('app.loading')}
@@ -244,6 +250,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
             )}
           </TurnList>
         )}
+        </div>
       </div>
       <Composer
         onSend={(q) => void run({ query: q })}
@@ -263,7 +270,9 @@ export function Conversation({ kbId, docId, kbName }: Props) {
           </Button>
         </div>
       </Sheet>
+      </div>
       <SourceSheet kbId={kbId} docId={docId ?? null} onClose={() => navigate(paths.conversation(kbId), { replace: true })} />
+      </div>
     </main>
   );
 }

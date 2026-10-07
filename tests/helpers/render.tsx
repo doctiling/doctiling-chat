@@ -23,6 +23,66 @@ export const HOST: Required<ChatAppProps> = {
   version: '0.2.0-test',
 };
 
+/** The two viewports the chat distinguishes (Tailwind `md` = 768 px). Default in tests: mobile (tests/setup.ts). */
+export const VIEWPORTS = { mobile: 375, desktop: 1280 } as const;
+
+type Listener = (e: MediaQueryListEvent) => void;
+const viewport: { width: number; lists: Set<{ update: () => void }> } = { width: VIEWPORTS.mobile, lists: new Set() };
+const OURS = Symbol('viewport-matchMedia');
+
+const evaluate = (query: string) => {
+  const min = /\(min-width:\s*(\d+(?:\.\d+)?)px\)/.exec(query);
+  const max = /\(max-width:\s*(\d+(?:\.\d+)?)px\)/.exec(query);
+  if (!min && !max) return false;
+  return (!min || viewport.width >= Number(min[1])) && (!max || viewport.width <= Number(max[1]));
+};
+
+class FakeMediaQueryList extends EventTarget {
+  media: string;
+  matches: boolean;
+  onchange: Listener | null = null;
+  constructor(query: string) {
+    super();
+    this.media = query;
+    this.matches = evaluate(query);
+    viewport.lists.add(this);
+  }
+  update() {
+    const next = evaluate(this.media);
+    if (next === this.matches) return;
+    this.matches = next;
+    const ev = new Event('change') as MediaQueryListEvent;
+    Object.defineProperty(ev, 'matches', { value: next });
+    Object.defineProperty(ev, 'media', { value: this.media });
+    this.dispatchEvent(ev);
+    this.onchange?.(ev);
+  }
+  addListener(cb: Listener) {
+    this.addEventListener('change', cb as EventListener);
+  }
+  removeListener(cb: Listener) {
+    this.removeEventListener('change', cb as EventListener);
+  }
+}
+
+/**
+ * A `matchMedia` that answers `(min-width: Npx)` / `(max-width: Npx)` against a viewport width and fires
+ * `change` when the viewport changes within a test. Anything else (`display-mode`…) is false. Installed with
+ * `vi.stubGlobal`, so `afterEach` (`vi.unstubAllGlobals`) brings every test back to the mobile default.
+ */
+export function setViewport(name: keyof typeof VIEWPORTS) {
+  viewport.width = VIEWPORTS[name];
+  const installed = (window.matchMedia as unknown as { [OURS]?: true } | undefined)?.[OURS];
+  if (!installed) {
+    viewport.lists.clear();
+    const fn = (query: string) => new FakeMediaQueryList(query) as unknown as MediaQueryList;
+    (fn as unknown as { [OURS]?: true })[OURS] = true;
+    vi.stubGlobal('matchMedia', fn);
+    return;
+  }
+  for (const l of viewport.lists) l.update();
+}
+
 /** Render the whole app as the host does (own router under basePath). */
 export function renderChatApp(overrides: Partial<ChatAppProps> = {}) {
   return render(<ChatApp {...HOST} {...overrides} />);

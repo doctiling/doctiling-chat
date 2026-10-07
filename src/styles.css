@@ -16,6 +16,21 @@
   overscroll-behavior-y: none;
 }
 
+/* Desktop shell (≥ md, rendered by ChatApp when matchMedia says so): two columns
+   filling the viewport; each column hosts a screen whose .app-shell then fills
+   the column instead of the viewport. */
+.desktop-shell {
+  display: flex;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
+  overscroll-behavior-y: none;
+}
+.desktop-shell .app-shell {
+  height: 100%;
+  max-width: none;
+  padding-top: 0;
+}
+
 .scroll-area {
   flex: 1;
   min-height: 0;

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { ArrowUp, Square } from 'lucide-react';
 import { IconButton } from './IconButton';
 import { useLanguage } from '../i18n/use-language';
+import { useIsDesktop } from '../lib/media';
 
 type Props = {
   onSend: (query: string) => void;
@@ -17,8 +18,11 @@ type Props = {
 // (see useVisualViewportHeight in app.tsx) and the safe-area inset keeps the
 // controls above the home bar. Double tap on send produces one request: the
 // query is cleared synchronously before the parent is called.
+// Enter sends only on desktop (≥ md, a physical keyboard is likely); on a phone
+// Enter is a newline and the Send button is the only way to send.
 export function Composer({ onSend, onStop, running, disabled = false, hint, prefill }: Props) {
   const { t } = useLanguage();
+  const desktop = useIsDesktop();
   const [value, setValue] = React.useState('');
   const ref = React.useRef<HTMLTextAreaElement>(null);
   React.useEffect(() => {
@@ -68,20 +72,21 @@ export function Composer({ onSend, onStop, running, disabled = false, hint, pref
       }}
       data-testid="composer"
     >
+      <div className="mx-auto w-full md:max-w-[760px]">
       <div className="flex items-end gap-2 rounded-2xl border border-input bg-card px-3 py-1.5">
         <textarea
           ref={ref}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            if (desktop && e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
               send();
             }
           }}
           rows={1}
           disabled={disabled}
-          enterKeyHint="send"
+          enterKeyHint={desktop ? 'send' : 'enter'}
           autoComplete="off"
           aria-label={t('conversation.placeholder')}
           placeholder={t('conversation.placeholder')}
@@ -104,7 +109,13 @@ export function Composer({ onSend, onStop, running, disabled = false, hint, pref
           </IconButton>
         )}
       </div>
-      {hint && <p className="mt-1 px-1 text-center text-[11px] text-muted-foreground">{hint}</p>}
+      {(hint || desktop) && (
+        <p className="mt-1 px-1 text-center text-[11px] text-muted-foreground">
+          {desktop && <span className="mr-2">{t('desktop.enterHint')}</span>}
+          {hint}
+        </p>
+      )}
+      </div>
     </form>
   );
 }
