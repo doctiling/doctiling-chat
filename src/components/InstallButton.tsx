@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Download } from 'lucide-react';
-import { Button } from './Button';
-import { Tooltip } from './Tooltip';
-import { useLanguage } from '@/i18n/use-language';
-import { isStandalone, useInstallPrompt } from '@/lib/pwa';
+import { Button } from '@doctiling/ui/atoms/button';
+import { SimpleTooltip } from '@doctiling/ui/molecules/tooltip';
+import { useLanguage } from '../i18n/use-language';
+import { isStandalone, useInstallPrompt } from '../lib/install';
 
 /** Shown only when the browser offered `beforeinstallprompt` and we are not installed. */
 export function InstallButton({ full = false }: { full?: boolean }) {
@@ -12,11 +12,13 @@ export function InstallButton({ full = false }: { full?: boolean }) {
   const [busy, setBusy] = React.useState(false);
   if (!prompt || isStandalone()) return null;
   return (
-    <Tooltip label={t('pwa.installHint')}>
+    <SimpleTooltip label={t('pwa.installHint')}>
       <Button
-        variant="secondary"
-        full={full}
-        pending={busy}
+        variant="outline"
+        size="lg"
+        className={full ? 'w-full' : ''}
+        disabled={busy}
+        aria-busy={busy || undefined}
         onClick={async () => {
           if (busy) return;
           setBusy(true);
@@ -28,9 +30,9 @@ export function InstallButton({ full = false }: { full?: boolean }) {
           }
         }}
       >
-        <Download className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+        <Download strokeWidth={1.75} aria-hidden="true" />
         {t('pwa.install')}
       </Button>
-    </Tooltip>
+    </SimpleTooltip>
   );
 }

@@ -1,8 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { Conversation } from '@/screens/Conversation';
-import { empty, json, mockFetch, ndjson, on, renderApp, seedToken, sessionStore, setConfig, type Route } from '../helpers/render';
+import { describe, expect, it } from 'vitest';
+import { Conversation } from '../../src/screens/Conversation';
+import { empty, json, mockFetch, ndjson, on, renderApp, sessionStore, type Route } from '../helpers/render';
 
 const session = (turns: unknown[] = [], extra: Record<string, unknown> = {}) => json({ turns, actions: [], pending: null, isRunning: false, ...extra });
 
@@ -10,10 +10,6 @@ const session = (turns: unknown[] = [], extra: Record<string, unknown> = {}) => 
 // incremental text, Done), citations as links, typed Error translated, Stop aborts and the next send works.
 // [TS-411, TS-403, TS-390]
 describe('Conversation stream (T062)', () => {
-  beforeEach(() => {
-    setConfig();
-    seedToken();
-  });
 
   it('loads the session and renders existing turns with their activity', async () => {
     mockFetch([
@@ -30,7 +26,7 @@ describe('Conversation stream (T062)', () => {
     expect(await screen.findByText('How many vacation days?')).toBeInTheDocument();
     expect(screen.getByText('Searching the knowledge base')).toBeInTheDocument();
     const link = screen.getByRole('link', { name: 'd1' });
-    expect(link).toHaveAttribute('href', '/kb/kb-pol/doc/d1');
+    expect(link).toHaveAttribute('href', '/es/chat/kb/kb-pol/doc/d1');
   });
 
   it('streams: activity while there is no text, incremental text, citations tappable (TS-411)', async () => {
@@ -83,7 +79,7 @@ describe('Conversation stream (T062)', () => {
     await waitFor(() => expect(screen.queryByTestId('turn-live')).not.toBeInTheDocument());
     const agentTurns = screen.getAllByTestId('turn').filter((t) => t.dataset.role === 'agent');
     expect(agentTurns).toHaveLength(1);
-    expect(within(agentTurns[0]!).getByRole('link', { name: 'pol-7' })).toHaveAttribute('href', '/kb/kb-pol/doc/pol-7');
+    expect(within(agentTurns[0]!).getByRole('link', { name: 'pol-7' })).toHaveAttribute('href', '/es/chat/kb/kb-pol/doc/pol-7');
     expect(within(agentTurns[0]!).getByText('15').tagName).toBe('STRONG');
     const post = calls.find((c) => c.init.method === 'POST');
     expect(JSON.parse(String(post!.init.body))).toEqual({ query: 'vacation?' });

@@ -10,45 +10,6 @@
     "openSettings": "Settings",
     "menu": "Menu"
   },
-  "connect": {
-    "title": "Chat with your organisation's knowledge",
-    "lead": "Doctiling Chat uses your account in {host}. There is nothing to register: connect once and ask from your phone.",
-    "leadNoHost": "Doctiling Chat uses the account you already have in your organisation's studio. There is nothing to register.",
-    "button": "Connect",
-    "buttonHint": "Open your organisation's studio to confirm it is you",
-    "connecting": "Opening your studio…",
-    "howItWorks": "How does it work?",
-    "steps": {
-      "one": "You sign in to your organisation's studio as usual.",
-      "two": "You confirm that you want to connect the chat.",
-      "three": "You come back here, identified, and see the knowledge bases shared with you."
-    },
-    "signedOut": {
-      "self": "You signed out.",
-      "invalid": "Your chat session is no longer valid. Connect again.",
-      "expired": "Your chat session expired. Connect again.",
-      "revoked": "Your access was removed. Connect again if you think this is a mistake.",
-      "chat_disabled": "The chat is not enabled for this organisation.",
-      "unknown": "Connect again to continue."
-    },
-    "callback": {
-      "title": "Connecting…",
-      "working": "Checking your access with the studio…",
-      "done": "Connected. Taking you to your knowledge bases…",
-      "openInApp": "Open in the app",
-      "openInAppHint": "You are in the browser. Open Doctiling Chat from your home screen and connect again from there.",
-      "tryAgain": "Try again"
-    },
-    "errors": {
-      "state_mismatch": "This connection did not start from this device. Start again from the chat.",
-      "missing_code": "The studio did not send a connection code. Start again.",
-      "invalid_code": "This connection link is no longer valid. Connect again.",
-      "rate_limited": "Too many attempts. Try again in a while.",
-      "chat_disabled": "The chat is not enabled for this organisation.",
-      "network": "Could not reach your organisation's studio. Check your connection and retry.",
-      "unknown": "Something went wrong while connecting. Try again."
-    }
-  },
   "kb": {
     "title": "Knowledge bases",
     "subtitle": "Only what has been shared with you.",
@@ -170,7 +131,6 @@
       "collaborator": "Collaborator",
       "guest": "Guest"
     },
-    "sessionUntil": "Session valid until {date}",
     "language": "Language",
     "languages": {
       "en": "English",
@@ -178,10 +138,10 @@
     },
     "version": "Version",
     "signOut": "Sign out",
-    "signOutHint": "Disconnect this device from your organisation's chat",
-    "signingOut": "Signing out…",
+    "signOutHint": "Close your studio session on this device",
     "install": "Install the app",
-    "loadFailed": "Your account could not be loaded."
+    "loadFailed": "Your account could not be loaded.",
+    "openStudio": "Open the studio"
   },
   "offline": {
     "banner": "You are offline. Nothing is served from a local copy.",
@@ -200,5 +160,10 @@
       "body": "Tap Share, then \"Add to Home Screen\". The chat opens full screen and keeps you signed in.",
       "dismiss": "Not now"
     }
+  },
+  "notEnabled": {
+    "title": "The chat is not enabled here",
+    "body": "Your organisation has not switched on Doctiling Chat for this space. The studio keeps working as usual.",
+    "cta": "Go to the studio"
   }
 }

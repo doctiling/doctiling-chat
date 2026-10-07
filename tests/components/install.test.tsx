@@ -1,10 +1,10 @@
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { InstallButton } from '@/components/InstallButton';
-import { IosInstallHint } from '@/components/IosInstallHint';
-import { _setDeferredPromptForTests, isStandalone, type BeforeInstallPromptEvent } from '@/lib/pwa';
-import { getPrefs } from '@/lib/storage';
+import { InstallButton } from '../../src/components/InstallButton';
+import { IosInstallHint } from '../../src/components/IosInstallHint';
+import { _setDeferredPromptForTests, isStandalone, type BeforeInstallPromptEvent } from '../../src/lib/install';
+import { getPrefs } from '../../src/lib/storage';
 import { renderApp } from '../helpers/render';
 
 const IOS_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1';
@@ -24,7 +24,8 @@ describe('InstallButton (T072)', () => {
     const prompt = vi.fn(async () => {});
     act(() => _setDeferredPromptForTests({ prompt, userChoice: Promise.resolve({ outcome: 'accepted' }) } as unknown as BeforeInstallPromptEvent));
     const button = await screen.findByRole('button', { name: 'Install' });
-    expect(button).toHaveAttribute('aria-describedby');
+    act(() => button.focus());
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/home screen/i);
     await userEvent.setup().click(button);
     expect(prompt).toHaveBeenCalledTimes(1);
   });

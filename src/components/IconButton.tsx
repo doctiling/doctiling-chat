@@ -1,8 +1,10 @@
 import * as React from 'react';
-import { Tooltip } from './Tooltip';
+import { Button } from '@doctiling/ui/atoms/button';
+import { SimpleTooltip } from '@doctiling/ui/molecules/tooltip';
 
 // Every icon control carries a mandatory label: it is the accessible name AND
 // the tooltip (Constitution P3; eslint forbids <IconButton> without `label`).
+// Thin composition over the design system: Button (ghost, icon) + SimpleTooltip.
 type Props = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label' | 'children'> & {
   label: string;
   children: React.ReactNode;
@@ -11,9 +13,15 @@ type Props = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label' | 
 };
 
 const VARIANT = {
-  ghost: 'bg-transparent text-foreground hover:bg-muted',
-  primary: 'bg-primary text-primaryForeground hover:opacity-90',
-  destructive: 'bg-transparent text-destructive hover:bg-muted',
+  ghost: 'ghost',
+  primary: 'default',
+  destructive: 'ghost',
+} as const;
+
+const EXTRA = {
+  ghost: '',
+  primary: '',
+  destructive: 'text-destructive hover:text-destructive',
 };
 
 export const IconButton = React.forwardRef<HTMLButtonElement, Props>(function IconButton(
@@ -21,16 +29,18 @@ export const IconButton = React.forwardRef<HTMLButtonElement, Props>(function Ic
   ref,
 ) {
   return (
-    <Tooltip label={label} side={tooltipSide}>
-      <button
+    <SimpleTooltip label={label} side={tooltipSide}>
+      <Button
         ref={ref}
         type={type}
+        variant={VARIANT[variant]}
+        size="icon"
         aria-label={label}
-        className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-full p-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT[variant]} ${className}`}
+        className={`h-11 w-11 min-h-[44px] min-w-[44px] rounded-full [&_svg]:size-5 ${EXTRA[variant]} ${className}`}
         {...rest}
       >
         {children}
-      </button>
-    </Tooltip>
+      </Button>
+    </SimpleTooltip>
   );
 });

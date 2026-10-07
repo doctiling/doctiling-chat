@@ -1,7 +1,7 @@
-// The only door to the tenant's API (contracts/chat-api.md). Adds the bearer,
-// turns any 401 into a sign-out, and reads NDJSON streams line by line.
-import { config } from '@/config';
-import { clearToken, getToken } from './storage';
+// The only door to the tenant's API (contracts/chat-api.md). Same origin, the
+// studio session cookie is the credential: a 401 sends the person to the
+// studio's sign-in with a return URL; a bare 404 on /api/chat/* means the chat
+// is not enabled for this tenant. NDJSON streams are read line by line.
 
 export type ApiErrorBody = { error: string; messageKey?: string };
 
@@ -16,73 +16,30 @@ export class ApiError extends Error {
   }
 }
 
-export type SignOutReason = 'invalid' | 'expired' | 'revoked' | 'chat_disabled' | 'self' | 'unknown';
+export type ChatApiConfig = {
+  /** Prefix of the API, '' for the same origin (default) or an origin in tests. */
+  apiBase?: string;
+  /** Studio sign-in page; gets `?callbackUrl=<current path>` appended on 401. */
+  signInHref: string;
+  /** Called once when a /api/chat/* route answers 404 without a body (chat disabled, FR-027). */
+  onDisabled?: () => void;
+  /** Top-level navigation (default window.location.assign); injectable for tests. */
+  navigateTo?: (url: string) => void;
+};
 
-type SignOutListener = (reason: SignOutReason) => void;
-const listeners = new Set<SignOutListener>();
-
-export function onSignOut(listener: SignOutListener): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-/** Forget the token and tell the app to go back to Connect. */
-export async function signOut(reason: SignOutReason): Promise<void> {
-  await clearToken();
-  for (const l of listeners) l(reason);
-}
-
-async function parseError(res: Response): Promise<ApiErrorBody> {
+async function parseError(res: Response): Promise<ApiErrorBody | null> {
   try {
     const body = (await res.json()) as Partial<ApiErrorBody>;
     if (body && typeof body.error === 'string') return { error: body.error, messageKey: body.messageKey };
   } catch {
     /* no JSON body */
   }
-  return { error: res.status === 404 ? 'chat_disabled' : 'unknown' };
+  return null;
 }
 
-const SIGN_OUT_REASONS: SignOutReason[] = ['invalid', 'expired', 'revoked', 'chat_disabled'];
-
-export type ApiFetchInit = RequestInit & { auth?: boolean };
-
-/**
- * fetch against `${apiOrigin}${path}`. With `auth` (default true) the bearer is
- * attached; a missing token or any 401 ends the session (FR-005, FR-006).
- * Non-2xx responses throw ApiError with the body's `error` code.
- */
-export async function apiFetch(path: string, init: ApiFetchInit = {}): Promise<Response> {
-  const { auth = true, headers, ...rest } = init;
-  const h = new Headers(headers);
-  if (auth) {
-    const stored = await getToken();
-    if (!stored) {
-      await signOut('invalid');
-      throw new ApiError(401, 'invalid');
-    }
-    h.set('Authorization', `Bearer ${stored.token}`);
-  }
-  if (rest.body && !h.has('Content-Type')) h.set('Content-Type', 'application/json');
-  let res: Response;
-  try {
-    res = await fetch(`${config().apiOrigin}${path}`, { ...rest, headers: h });
-  } catch (e) {
-    if ((e as Error)?.name === 'AbortError') throw new ApiError(0, 'aborted');
-    throw new ApiError(0, 'network');
-  }
-  if (res.ok) return res;
-  const body = await parseError(res);
-  if (res.status === 401 && auth) {
-    const reason = SIGN_OUT_REASONS.includes(body.error as SignOutReason) ? (body.error as SignOutReason) : 'invalid';
-    await signOut(reason);
-  }
-  throw new ApiError(res.status, body.error, body.messageKey);
-}
-
-export async function apiJson<T>(path: string, init?: ApiFetchInit): Promise<T> {
-  const res = await apiFetch(path, init);
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+export function signInUrl(signInHref: string, currentUrl: string): string {
+  const sep = signInHref.includes('?') ? '&' : '?';
+  return `${signInHref}${sep}callbackUrl=${encodeURIComponent(currentUrl)}`;
 }
 
 /** Port of doctiling-web `readNdjson`: one JSON per line, partial lines buffered. */
@@ -122,7 +79,6 @@ export type MeView = {
   name: string | null;
   role: 'admin' | 'collaborator' | 'guest';
   tenant: { host: string; name: string };
-  limits: { tokenExpiresAt: number };
 };
 
 export type KnowledgeBaseItem = {
@@ -183,22 +139,72 @@ export type DocumentView = {
   updatedAt: number | null;
 };
 
-export const api = {
-  me: () => apiJson<MeView>('/api/chat/me'),
-  knowledgeBases: () => apiJson<{ items: KnowledgeBaseItem[] }>('/api/chat/knowledge-bases'),
-  session: (kbId: string) => apiJson<SessionView>(`/api/chat/knowledge-bases/${encodeURIComponent(kbId)}/session`),
-  clearSession: (kbId: string) =>
-    apiFetch(`/api/chat/knowledge-bases/${encodeURIComponent(kbId)}/session/clear`, { method: 'POST' }),
-  document: (kbId: string, docId: string) =>
-    apiJson<DocumentView>(
-      `/api/chat/knowledge-bases/${encodeURIComponent(kbId)}/documents/${encodeURIComponent(docId)}`,
-    ),
+export type AgentBody = { query: string } | { resume: { pendingId: string; approved: boolean } };
+
+export type ChatApi = {
+  fetch: (path: string, init?: RequestInit) => Promise<Response>;
+  me: () => Promise<MeView>;
+  knowledgeBases: () => Promise<{ items: KnowledgeBaseItem[] }>;
+  session: (kbId: string) => Promise<SessionView>;
+  clearSession: (kbId: string) => Promise<Response>;
+  document: (kbId: string, docId: string) => Promise<DocumentView>;
   /** NDJSON stream; the caller iterates with readNdjson and aborts with the signal. */
-  agent: (kbId: string, body: { query: string } | { resume: { pendingId: string; approved: boolean } }, signal: AbortSignal) =>
-    apiFetch(`/api/chat/knowledge-bases/${encodeURIComponent(kbId)}/agent`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-      signal,
-    }),
-  revoke: () => apiFetch('/api/chat/token/revoke', { method: 'POST' }),
+  agent: (kbId: string, body: AgentBody, signal: AbortSignal) => Promise<Response>;
 };
+
+export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo }: ChatApiConfig): ChatApi {
+  const base = apiBase.replace(/\/+$/, '');
+  const go = navigateTo ?? ((url: string) => window.location.assign(url));
+  let disabledSeen = false;
+
+  /**
+   * fetch against `${apiBase}${path}` with the session cookie. 401 → studio
+   * sign-in with return (FR-002); bare 404 → chat disabled (FR-027). Other
+   * non-2xx responses throw ApiError with the body's `error` code.
+   */
+  async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+    const { headers, ...rest } = init;
+    const h = new Headers(headers);
+    h.set('Accept', h.get('Accept') ?? 'application/json, application/x-ndjson');
+    if (rest.body && !h.has('Content-Type')) h.set('Content-Type', 'application/json');
+    let res: Response;
+    try {
+      res = await fetch(`${base}${path}`, { ...rest, headers: h, credentials: 'same-origin' });
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') throw new ApiError(0, 'aborted');
+      throw new ApiError(0, 'network');
+    }
+    if (res.ok) return res;
+    const body = await parseError(res);
+    if (res.status === 401) {
+      go(signInUrl(signInHref, `${window.location.pathname}${window.location.search}`));
+      throw new ApiError(401, body?.error ?? 'unauthenticated', body?.messageKey);
+    }
+    if (res.status === 404 && !body) {
+      if (!disabledSeen) {
+        disabledSeen = true;
+        onDisabled?.();
+      }
+      throw new ApiError(404, 'chat_disabled');
+    }
+    throw new ApiError(res.status, body?.error ?? 'unknown', body?.messageKey);
+  }
+
+  async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
+    const res = await apiFetch(path, init);
+    if (res.status === 204) return undefined as T;
+    return (await res.json()) as T;
+  }
+
+  const kb = (kbId: string) => `/api/chat/knowledge-bases/${encodeURIComponent(kbId)}`;
+
+  return {
+    fetch: apiFetch,
+    me: () => apiJson<MeView>('/api/chat/me'),
+    knowledgeBases: () => apiJson<{ items: KnowledgeBaseItem[] }>('/api/chat/knowledge-bases'),
+    session: (kbId) => apiJson<SessionView>(`${kb(kbId)}/session`),
+    clearSession: (kbId) => apiFetch(`${kb(kbId)}/session/clear`, { method: 'POST' }),
+    document: (kbId, docId) => apiJson<DocumentView>(`${kb(kbId)}/documents/${encodeURIComponent(docId)}`),
+    agent: (kbId, body, signal) => apiFetch(`${kb(kbId)}/agent`, { method: 'POST', body: JSON.stringify(body), signal }),
+  };
+}

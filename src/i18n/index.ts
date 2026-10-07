@@ -1,6 +1,7 @@
 import en from './en.json';
 import es from './es.json';
-import type { Language } from '@/lib/storage';
+
+export type Language = 'en' | 'es';
 
 export const dictionaries: Record<Language, Record<string, unknown>> = { en, es };
 
@@ -29,10 +30,6 @@ export function translate(language: Language, key: string, values?: Record<strin
 /** True when the key exists in the dictionary (used to decide on generic fallbacks). */
 export function hasKey(language: Language, key: string): boolean {
   return lookup(dictionaries[language], key) !== undefined;
-}
-
-export function detectLanguage(navigatorLanguage: string | undefined): Language {
-  return (navigatorLanguage ?? '').toLowerCase().startsWith('es') ? 'es' : 'en';
 }
 
 /** Flatten a dictionary to its dotted key set (parity test + tooling). */

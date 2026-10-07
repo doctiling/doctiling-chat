@@ -1,18 +1,19 @@
 import * as React from 'react';
 import { ArrowLeft, Trash2 } from 'lucide-react';
-import { Button } from '@/components/Button';
-import { Composer } from '@/components/Composer';
-import { ConfirmCard } from '@/components/ConfirmCard';
-import { IconButton } from '@/components/IconButton';
-import { OfflineBanner } from '@/components/OfflineBanner';
-import { Sheet } from '@/components/Sheet';
-import { useToast } from '@/components/Toast';
-import { TurnList, type LiveState } from '@/components/TurnList';
-import { hasKey } from '@/i18n';
-import { useLanguage } from '@/i18n/use-language';
-import { api, ApiError, readNdjson, type Activity, type AgentEvent, type Pending, type Turn } from '@/lib/api';
-import { reportNetworkFailure, reportNetworkSuccess } from '@/lib/online';
-import { navigate, paths } from '@/lib/router';
+import { Button } from '@doctiling/ui/atoms/button';
+import { Composer } from '../components/Composer';
+import { ConfirmCard } from '../components/ConfirmCard';
+import { IconButton } from '../components/IconButton';
+import { OfflineBanner } from '../components/OfflineBanner';
+import { Sheet } from '../components/Sheet';
+import { useToast } from '../components/Toast';
+import { TurnList, type LiveState } from '../components/TurnList';
+import { hasKey } from '../i18n';
+import { useLanguage } from '../i18n/use-language';
+import { ApiError, readNdjson, type Activity, type AgentBody, type AgentEvent, type Pending, type Turn } from '../lib/api';
+import { useChat } from '../lib/chat-context';
+import { reportNetworkFailure, reportNetworkSuccess } from '../lib/online';
+import { navigate } from '../lib/router';
 import { SourceSheet } from './SourceSheet';
 
 type Props = { kbId: string; docId?: string; kbName?: string };
@@ -23,6 +24,7 @@ const uid = () => `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}
 // screen (ref guard), AbortController to stop, no automatic reconnection.
 export function Conversation({ kbId, docId, kbName }: Props) {
   const { t, language } = useLanguage();
+  const { api, paths } = useChat();
   const { push } = useToast();
   const [turns, setTurns] = React.useState<Turn[]>([]);
   const [pending, setPending] = React.useState<Pending | null>(null);
@@ -46,7 +48,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [kbId, kbName]);
+  }, [api, kbId, kbName]);
   const runGuard = React.useRef(false);
   const abortRef = React.useRef<AbortController | null>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
@@ -58,6 +60,8 @@ export function Conversation({ kbId, docId, kbName }: Props) {
     },
     [language, t],
   );
+
+  const silent = (e: unknown) => e instanceof ApiError && (e.status === 401 || e.code === 'chat_disabled');
 
   const load = React.useCallback(async () => {
     try {
@@ -74,11 +78,11 @@ export function Conversation({ kbId, docId, kbName }: Props) {
         navigate(paths.kbs(), { replace: true });
         return;
       }
-      if (!(e instanceof ApiError && e.status === 401)) setLoadError(true);
+      if (!silent(e)) setLoadError(true);
     } finally {
       setLoaded(true);
     }
-  }, [kbId, push, errorText]);
+  }, [api, kbId, paths, push, errorText]);
 
   React.useEffect(() => {
     void load();
@@ -91,7 +95,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
   React.useEffect(scrollToEnd, [turns.length, live?.text, pending, scrollToEnd]);
 
   const run = React.useCallback(
-    async (body: { query: string } | { resume: { pendingId: string; approved: boolean } }) => {
+    async (body: AgentBody) => {
       if (runGuard.current) return;
       runGuard.current = true;
       setRunning(true);
@@ -157,7 +161,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
             // A 409 means the user turn never reached the server: drop the optimistic copy.
             if ('query' in body) setTurns((ts) => ts.filter((x) => x.id !== userTurnId));
             setNotice(errorText(e.code));
-          } else if (e.status !== 401) {
+          } else if (!silent(e)) {
             push({ message: errorText('sendFailed'), kind: 'error' });
           }
         }
@@ -173,7 +177,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
         if (sawDone || !controller.signal.aborted) void load();
       }
     },
-    [kbId, t, language, push, errorText, load],
+    [api, kbId, t, language, push, errorText, load],
   );
 
   const stop = React.useCallback(() => {
@@ -190,28 +194,28 @@ export function Conversation({ kbId, docId, kbName }: Props) {
     } catch (e) {
       setClearOpen(false);
       if (e instanceof ApiError && e.status === 409) push({ message: errorText('clearFailed'), kind: 'error' });
-      else if (!(e instanceof ApiError && e.status === 401)) push({ message: errorText('unknown'), kind: 'error' });
+      else if (!silent(e)) push({ message: errorText('unknown'), kind: 'error' });
     }
-  }, [kbId, push, errorText]);
+  }, [api, kbId, push, errorText]);
 
-  const hrefFor = React.useCallback((id: string) => paths.document(kbId, id), [kbId]);
+  const hrefFor = React.useCallback((id: string) => paths.document(kbId, id), [paths, kbId]);
   const openDoc = React.useCallback((href: string) => navigate(href), []);
 
   return (
     <main className="app-shell">
       <header className="flex items-center gap-1 border-b border-border px-2 py-1.5">
         <IconButton label={t('app.back')} onClick={() => navigate(paths.kbs())}>
-          <ArrowLeft className="h-5 w-5" strokeWidth={1.75} />
+          <ArrowLeft strokeWidth={1.75} />
         </IconButton>
         <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{resolvedName ?? t('kb.title')}</h1>
         <IconButton label={t('conversation.clear')} onClick={() => setClearOpen(true)} disabled={running || turns.length === 0}>
-          <Trash2 className="h-5 w-5" strokeWidth={1.75} />
+          <Trash2 strokeWidth={1.75} />
         </IconButton>
       </header>
       <OfflineBanner onRetry={() => void load()} />
       <div className="scroll-area" ref={listRef}>
         {!loaded && (
-          <p role="status" className="px-4 py-8 text-center text-mutedForeground">
+          <p role="status" className="px-4 py-8 text-center text-muted-foreground">
             {t('app.loading')}
           </p>
         )}
@@ -220,13 +224,13 @@ export function Conversation({ kbId, docId, kbName }: Props) {
             <p role="alert" className="text-destructive">
               {t('conversation.loadFailed')}
             </p>
-            <Button variant="secondary" className="mt-3" onClick={() => void load()}>
+            <Button variant="outline" size="lg" className="mt-3" onClick={() => void load()}>
               {t('app.retry')}
             </Button>
           </div>
         )}
         {loaded && !loadError && turns.length === 0 && !live && !pending && (
-          <p className="px-6 py-10 text-center text-sm text-mutedForeground">{t('conversation.empty')}</p>
+          <p className="px-6 py-10 text-center text-sm text-muted-foreground">{t('conversation.empty')}</p>
         )}
         {loaded && !loadError && (
           <TurnList turns={turns} live={live} hrefFor={hrefFor} onOpenDoc={openDoc} onPickFollowup={(q) => setPrefill({ text: q, nonce: Date.now() })}>
@@ -251,10 +255,10 @@ export function Conversation({ kbId, docId, kbName }: Props) {
       />
       <Sheet open={clearOpen} onOpenChange={setClearOpen} heading={t('conversation.clearConfirm.title')} description={t('conversation.clearConfirm.body')}>
         <div className="grid grid-cols-2 gap-2 pt-2">
-          <Button variant="secondary" onClick={() => setClearOpen(false)}>
+          <Button variant="outline" size="lg" className="px-4" onClick={() => setClearOpen(false)}>
             {t('app.cancel')}
           </Button>
-          <Button variant="destructive" onClick={() => void clear()} data-testid="clear-confirm">
+          <Button variant="destructive" size="lg" className="px-4" onClick={() => void clear()} data-testid="clear-confirm">
             {t('conversation.clearConfirm.confirm')}
           </Button>
         </div>

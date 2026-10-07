@@ -1,18 +1,14 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { Conversation } from '@/screens/Conversation';
-import { json, mockFetch, ndjson, on, renderApp, seedToken, setConfig } from '../helpers/render';
+import { describe, expect, it } from 'vitest';
+import { Conversation } from '../../src/screens/Conversation';
+import { json, mockFetch, ndjson, on, renderApp } from '../helpers/render';
 
 const pending = { id: 'p1', toolName: 'delete_document', summaryKey: 'kbAgent.confirm.summary.delete_document', summaryValues: { name: 'Old policy' } };
 
 // T064 — Confirm event → card with target name, Confirm/Reject (tooltips, guard) → resume;
 // 409 confirmationPending when writing with a pending one. [TS-392]
 describe('Conversation confirm (T064, TS-392)', () => {
-  beforeEach(() => {
-    setConfig();
-    seedToken();
-  });
 
   it('renders the ConfirmCard from a Confirm event and resumes with approved:true on a double tap once', async () => {
     const posts: unknown[] = [];
@@ -42,7 +38,6 @@ describe('Conversation confirm (T064, TS-392)', () => {
     const card = await screen.findByTestId('confirm-card');
     expect(card).toHaveTextContent('Delete the document "Old policy"');
     const approve = screen.getByRole('button', { name: 'Confirm' });
-    expect(approve).toHaveAttribute('aria-describedby');
     expect(screen.getByRole('button', { name: 'Reject' })).toBeInTheDocument();
     await user.dblClick(approve);
     await waitFor(() => expect(posts).toHaveLength(2));

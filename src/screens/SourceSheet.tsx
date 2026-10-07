@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { Markdown } from '@/components/Markdown';
-import { Sheet } from '@/components/Sheet';
-import { useLanguage } from '@/i18n/use-language';
-import { api, ApiError, type DocumentView } from '@/lib/api';
+import { Markdown } from '../components/Markdown';
+import { Sheet } from '../components/Sheet';
+import { useLanguage } from '../i18n/use-language';
+import { ApiError, type DocumentView } from '../lib/api';
+import { useChat } from '../lib/chat-context';
 
 type Props = { kbId: string; docId: string | null; onClose: () => void };
 
@@ -10,6 +11,7 @@ type Props = { kbId: string; docId: string | null; onClose: () => void };
 // notice (the document may be private to someone else).
 export function SourceSheet({ kbId, docId, onClose }: Props) {
   const { t, language } = useLanguage();
+  const { api } = useChat();
   const [doc, setDoc] = React.useState<DocumentView | null>(null);
   const [error, setError] = React.useState<'forbidden' | 'notFound' | 'failed' | null>(null);
 
@@ -26,13 +28,13 @@ export function SourceSheet({ kbId, docId, onClose }: Props) {
       .catch((e: unknown) => {
         if (cancelled) return;
         if (e instanceof ApiError && e.status === 403) setError('forbidden');
-        else if (e instanceof ApiError && e.status === 404) setError('notFound');
-        else if (!(e instanceof ApiError && e.status === 401)) setError('failed');
+        else if (e instanceof ApiError && e.status === 404 && e.code !== 'chat_disabled') setError('notFound');
+        else if (!(e instanceof ApiError && (e.status === 401 || e.code === 'chat_disabled'))) setError('failed');
       });
     return () => {
       cancelled = true;
     };
-  }, [kbId, docId]);
+  }, [api, kbId, docId]);
 
   const subtitle = doc
     ? doc.updatedAt
@@ -43,7 +45,7 @@ export function SourceSheet({ kbId, docId, onClose }: Props) {
   return (
     <Sheet open={!!docId} onOpenChange={(o) => !o && onClose()} heading={doc?.title ?? t('sourceSheet.title')} description={subtitle}>
       {!doc && !error && (
-        <p role="status" className="py-6 text-center text-mutedForeground">
+        <p role="status" className="py-6 text-center text-muted-foreground">
           {t('sourceSheet.loading')}
         </p>
       )}

@@ -1,6 +1,7 @@
 # Constitution — doctiling-chat
 
-**Version 1.0.0** · Principles of the tenant chat PWA (spec 045 of doctiling-web).
+**Version 2.0.0** · Principles of the tenant chat package (spec 045 of doctiling-web, plan amendment
+2026-10-07: the chat is compiled into the studio).
 Every principle states its strength: **BLOCKING** names the command that fails; otherwise it is **REVIEW**
 (judged by the `reviewer` subagent and the human). Amendments bump the version, in their own commit.
 
@@ -14,14 +15,14 @@ labels, manifest, offline page, icons.
 ## P2 — Both locales, same keys · BLOCKING
 
 `src/i18n/en.json` and `src/i18n/es.json` expose the same key set, in the same change. Screens never carry a
-literal string a person reads.
+literal string a person reads. The language is the host's locale, never detected from the browser.
 
 *Mechanism:* `tests/lib/i18n.test.ts` (parity, fails on one missing key) in `npm test`.
 
 ## P3 — Every icon control has a label and a tooltip · BLOCKING
 
 `<IconButton label=…>` is the only way to render an icon-only control; the label is the accessible name and
-the tooltip. Native `title=` is not a tooltip. Touch targets are 44 px or more.
+the design-system tooltip (`SimpleTooltip`). Native `title=` is not a tooltip. Touch targets are 44 px or more.
 
 *Mechanism:* `npm run lint` (`no-restricted-syntax`: `title=` in JSX, `<IconButton>` without `label`) and
 `tests/components/icon-button.test.tsx`.
@@ -36,22 +37,35 @@ An assertion is never adjusted to make a test pass; `.feature` files of the spec
 
 ## P6 — No double submit · REVIEW
 
-Send, confirm, reject, clear and sign out are guarded by a ref: a double tap produces one request
+Send, confirm, reject and clear are guarded by a ref: a double tap produces one request
 (`tests/screens/Conversation.lock.test.tsx`).
 
-## P7 — The client holds no business rules · REVIEW
+## P7 — Host-agnostic: the chat never imports the product · BLOCKING
 
-Permission, role, quota, scope, lock and the confirmation gate are decided by the server on every request.
-The app renders 401 (→ sign out), 403, 409 and the stream's `Error` events. Nothing of business is stored on
-the device; the service worker never caches `/api/*`, `/connect/*` or a request with `Authorization`
-(`tests/pwa/sw.test.ts`).
+Everything the chat needs from its host crosses `ChatAppProps` (`src/ChatApp.tsx`). No `next`, no `@/`
+import, no server action, no product i18n. `@doctiling/ui` is the only shared code, as a peer resolved by
+the host.
 
-## P8 — Nothing ships without a green gate · BLOCKING
+*Mechanism:* `npm run lint` (`no-restricted-imports` on `next`, `next/*`, `@/*` under `src/`),
+`npm run typecheck` (no `@/` path alias exists here) and `tests/screens/ChatApp.test.tsx`.
 
-*Mechanism:* `npm run gate` (`scripts/gate.sh`: harness self-test · docs link-check · white-label guard ·
-lint · typecheck · tests · build), the `Stop` hook, and `.github/workflows/gate.yml` on every push, PR and
-`v*` tag; `release.yml` runs the gate before publishing the image.
+## P8 — The client holds no business rules · REVIEW
 
-## P9 — Conduct on error · REVIEW
+Permission, role, quota, scope, lock and the confirmation gate are decided by the server on every request,
+with the studio session. The app renders 401 (→ studio sign-in with return), bare 404 (→ "not enabled"),
+403, 409 and the stream's `Error` events. Nothing of business is stored on the device (preferences only);
+the service worker never caches `/api/*`, a non-GET or a request with `Authorization` (`tests/pwa.test.ts`).
+
+## P9 — Nothing ships without a green gate · BLOCKING
+
+*Mechanism:* `npm run gate` (`scripts/gate.sh`: harness self-test · docs link-check · link @doctiling/ui ·
+white-label guard · lint · typecheck · tests), the `Stop` hook, and `.github/workflows/gate.yml` on every
+push, PR and `v*` tag; `release.yml` runs the gate and checks the tag against `version`.
+
+## P10 — Consumers pin tags · REVIEW
+
+Every change ships as a new `vX.Y.Z` tag with the `version` bumped; doctiling-web pins the HTTPS tarball.
+
+## P11 — Conduct on error · REVIEW
 
 Read the real output before retrying; after 2 failed attempts on the same error, stop and escalate.

@@ -1,15 +1,11 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { Conversation } from '@/screens/Conversation';
-import { json, mockFetch, ndjson, on, renderApp, seedToken, sessionStore, setConfig } from '../helpers/render';
+import { describe, expect, it } from 'vitest';
+import { Conversation } from '../../src/screens/Conversation';
+import { json, mockFetch, ndjson, on, renderApp, sessionStore } from '../helpers/render';
 
 // T065 — double tap on send → one request; 409 runInProgress → notice. [TS-409, TS-410]
 describe('Conversation lock (T065)', () => {
-  beforeEach(() => {
-    setConfig();
-    seedToken();
-  });
 
   it('a double tap on send produces exactly one request and one user turn (TS-410)', async () => {
     const store = sessionStore();

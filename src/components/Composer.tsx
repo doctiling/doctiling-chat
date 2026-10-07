@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ArrowUp, Square } from 'lucide-react';
 import { IconButton } from './IconButton';
-import { useLanguage } from '@/i18n/use-language';
+import { useLanguage } from '../i18n/use-language';
 
 type Props = {
   onSend: (query: string) => void;
@@ -85,7 +85,7 @@ export function Composer({ onSend, onStop, running, disabled = false, hint, pref
           autoComplete="off"
           aria-label={t('conversation.placeholder')}
           placeholder={t('conversation.placeholder')}
-          className="max-h-40 min-h-[44px] flex-1 resize-none bg-transparent py-2.5 text-base leading-6 text-cardForeground placeholder:text-mutedForeground focus:outline-none"
+          className="max-h-40 min-h-[44px] flex-1 resize-none bg-transparent py-2.5 text-base leading-6 text-card-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         {running ? (
           <IconButton key="stop" label={t('conversation.stop')} variant="destructive" tooltipSide="top" onClick={stop}>
@@ -104,7 +104,7 @@ export function Composer({ onSend, onStop, running, disabled = false, hint, pref
           </IconButton>
         )}
       </div>
-      {hint && <p className="mt-1 px-1 text-center text-[11px] text-mutedForeground">{hint}</p>}
+      {hint && <p className="mt-1 px-1 text-center text-[11px] text-muted-foreground">{hint}</p>}
     </form>
   );
 }

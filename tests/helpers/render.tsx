@@ -1,33 +1,59 @@
 import * as React from 'react';
 import { render, type RenderOptions } from '@testing-library/react';
 import { vi } from 'vitest';
-import { ToastProvider } from '@/components/Toast';
-import { LanguageProvider } from '@/i18n/use-language';
-import { resetConfigForTests } from '@/config';
-import { TOKEN_KEY, type Language } from '@/lib/storage';
+import { ChatApp, type ChatAppProps } from '../../src/ChatApp';
+import { ToastProvider } from '../../src/components/Toast';
+import { LanguageProvider } from '../../src/i18n/use-language';
+import type { Language } from '../../src/i18n';
+import { createChatApi, type ChatApiConfig } from '../../src/lib/api';
+import { ChatProvider, type ChatContextValue } from '../../src/lib/chat-context';
+import { makePaths } from '../../src/lib/router';
 
+/** The chat is same-origin: paths are relative. Tests pass an origin as apiBase so URLs are absolute and easy to match. */
 export const API = 'https://studio.tenant.test';
 
-/** Inject the runtime config the way server/serve.mjs does and reset the cache. */
-export function setConfig(partial: Partial<{ apiOrigin: string; chatHost: string; version: string }> = {}) {
-  window.__DOCTILING_CHAT__ = { apiOrigin: API, chatHost: 'chat.tenant.test', version: '0.1.0-test', ...partial };
-  resetConfigForTests();
+/** What the host (doctiling-web) passes to <ChatApp> for the Spanish studio. */
+export const HOST: Required<ChatAppProps> = {
+  basePath: '/es/chat',
+  locale: 'es',
+  apiBase: API,
+  signInHref: '/es/signin',
+  studioHref: '/es/kb',
+  signOutHref: '/es/auth/signout',
+  version: '0.2.0-test',
+};
+
+/** Render the whole app as the host does (own router under basePath). */
+export function renderChatApp(overrides: Partial<ChatAppProps> = {}) {
+  return render(<ChatApp {...HOST} {...overrides} />);
 }
 
-/** jsdom has no IndexedDB, so the storage module uses the localStorage fallback: seed it directly. */
-export function seedToken(token = 'dct_chat_test-token') {
-  window.localStorage.setItem(TOKEN_KEY, JSON.stringify({ token, expiresAt: Date.now() + 86_400_000, apiOrigin: API }));
-  return token;
-}
+type ScreenOptions = RenderOptions & { language?: Language; host?: Partial<ChatContextValue>; api?: Partial<ChatApiConfig> };
 
-export function renderApp(ui: React.ReactElement, { language = 'en', ...options }: RenderOptions & { language?: Language } = {}) {
+/** Render one screen inside the providers ChatApp would give it (a configured API, paths under basePath). */
+export function renderApp(ui: React.ReactElement, { language = 'en', host = {}, api: apiCfg = {}, ...options }: ScreenOptions = {}) {
+  const basePath = host.basePath ?? HOST.basePath;
+  const api = createChatApi({ apiBase: API, signInHref: HOST.signInHref, navigateTo: vi.fn(), ...apiCfg });
+  const value: ChatContextValue = {
+    basePath,
+    locale: language,
+    signInHref: HOST.signInHref,
+    studioHref: HOST.studioHref,
+    signOutHref: HOST.signOutHref,
+    version: HOST.version,
+    api,
+    paths: makePaths(basePath),
+    ...host,
+  };
   const wrap = (node: React.ReactElement) => (
-    <LanguageProvider initial={language}>
-      <ToastProvider>{node}</ToastProvider>
-    </LanguageProvider>
+    <ChatProvider value={value}>
+      <LanguageProvider language={language}>
+        <ToastProvider>{node}</ToastProvider>
+      </LanguageProvider>
+    </ChatProvider>
   );
   const result = render(wrap(ui), options);
-  return { ...result, rerender: (next: React.ReactElement) => result.rerender(wrap(next)) };
+  return { ...result, api, rerender: (next: React.ReactElement) => result.rerender(wrap(next)) };
 }
 
 /** A GET …/session mock whose turns follow what the agent mock appends (the server persists turns). */
@@ -52,6 +78,9 @@ export const json = (body: unknown, status = 200, headers: Record<string, string
 
 export const empty = (status = 204) => new Response(null, { status });
 
+/** What doctiling-web answers on every /api/chat/* route when the chat is not enabled (FR-027). */
+export const notEnabled = () => new Response(null, { status: 404 });
+
 /** NDJSON stream, one line per event, optionally split across odd chunk boundaries. */
 export function ndjson(events: unknown[], { chunkSize, delayMs = 0, signal }: { chunkSize?: number; delayMs?: number; signal?: AbortSignal } = {}) {
   const text = events.map((e) => JSON.stringify(e)).join('\n') + '\n';
@@ -75,7 +104,7 @@ export function ndjson(events: unknown[], { chunkSize, delayMs = 0, signal }: { 
   return new Response(stream, { status: 200, headers: { 'content-type': 'application/x-ndjson' } });
 }
 
-/** Install a fetch mock routed by predicate; returns the recorded calls. */
+/** Install a fetch mock routed by predicate; returns the recorded calls. Unmatched → 404 with a body (a missing resource, not a disabled chat). */
 export function mockFetch(routes: Route[]) {
   const calls: Call[] = [];
   const fn = vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {

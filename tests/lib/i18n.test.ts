@@ -1,11 +1,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import en from '@/i18n/en.json';
-import es from '@/i18n/es.json';
-import { detectLanguage, flattenKeys, interpolate, translate } from '@/i18n';
+import en from '../../src/i18n/en.json';
+import es from '../../src/i18n/es.json';
+import { flattenKeys, interpolate, translate } from '../../src/i18n';
 
-// T056 — EN/ES parity (BLOCKING, CONSTITUTION P2), detection, no literal copy in screens. [TS-446]
+// T056 — EN/ES parity (BLOCKING, CONSTITUTION P2), no connect/token keys left, no literal copy in screens. [TS-446]
 describe('i18n (T056, TS-446)', () => {
   it('en and es expose exactly the same key set', () => {
     const enKeys = flattenKeys(en);
@@ -14,6 +14,12 @@ describe('i18n (T056, TS-446)', () => {
     const onlyEs = esKeys.filter((k) => !enKeys.includes(k));
     expect({ onlyEn, onlyEs }).toEqual({ onlyEn: [], onlyEs: [] });
     expect(enKeys.length).toBeGreaterThan(100);
+  });
+
+  it('carries the not-enabled copy and nothing of the old connect / token flow', () => {
+    const keys = flattenKeys(en);
+    expect(keys).toEqual(expect.arrayContaining(['notEnabled.title', 'notEnabled.body', 'notEnabled.cta']));
+    expect(keys.filter((k) => /^connect\.|token|sessionUntil|signingOut/.test(k))).toEqual([]);
   });
 
   it('every value is a non-empty string and placeholders match across locales', () => {
@@ -28,17 +34,10 @@ describe('i18n (T056, TS-446)', () => {
   });
 
   it('translates with interpolation and falls back to the key', () => {
-    expect(translate('es', 'connect.button')).toBe('Conectar');
+    expect(translate('es', 'settings.signOut')).toBe('Cerrar sesión');
     expect(translate('en', 'kb.documents', { count: 3 })).toBe('3 documents');
     expect(translate('en', 'does.not.exist')).toBe('does.not.exist');
     expect(interpolate('a {x} {y}', { x: 1 })).toBe('a 1 {y}');
-  });
-
-  it('detects Spanish from navigator.language and defaults to English', () => {
-    expect(detectLanguage('es-CO')).toBe('es');
-    expect(detectLanguage('ES')).toBe('es');
-    expect(detectLanguage('en-US')).toBe('en');
-    expect(detectLanguage(undefined)).toBe('en');
   });
 
   it('screens and components render copy through t(), never a literal sentence', () => {

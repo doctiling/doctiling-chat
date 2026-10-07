@@ -3,7 +3,7 @@
   "gate": {
     "command": "npm run gate",
     "marker": ".git/gate-dirty",
-    "codePathPattern": "^(src|tests|scripts|server|public)/.*\\.(ts|tsx|mjs|js|json)$",
+    "codePathPattern": "^(src|tests|scripts|public)/.*\\.(ts|tsx|mjs|js|json|css)$",
     "postEdit": {
       "command": [
         "npx",
@@ -26,7 +26,7 @@
   "protectedPaths": [
     {
       "pattern": "(^|/)\\.env(\\.|$)",
-      "reason": ".env files are never edited by the agent. The chat has no secrets at all: its only configuration is DOCTILING_API_ORIGIN / DOCTILING_CHAT_HOST at runtime."
+      "reason": ".env files are never edited by the agent. This repo is public and the package has no runtime configuration at all: everything arrives as ChatApp props from the host."
     },
     {
       "pattern": "(^|/)package-lock\\.json$",
