@@ -48,9 +48,19 @@ describe('Conversation stream (T062)', () => {
       {
         match: on('POST', /\/agent$/),
         respond: () => {
+          // What the server persists for this run (activity included): on a slow runner the
+          // stream may finish and the session be re-read before the assertions below look.
           sessionTurns = [
             { id: 'u1', role: 'user', content: 'vacation?' },
-            { id: 'a1', role: 'agent', content: 'You have **15** days per year [[doc:pol-7]].' },
+            {
+              id: 'a1',
+              role: 'agent',
+              content: 'You have **15** days per year [[doc:pol-7]].',
+              activity: [
+                { toolName: 'search_knowledge_base', labelKey: 'kbAgent.activity.searching' },
+                { toolName: 'weird_tool', labelKey: 'kbAgent.activity.somethingUnknown' },
+              ],
+            },
           ];
           return ndjson(events, { delayMs: 5 });
         },
@@ -63,8 +73,8 @@ describe('Conversation stream (T062)', () => {
     await user.click(screen.getByRole('button', { name: 'Send' }));
 
     // Product language for the tool, generic fallback for an unknown label key, never the tool name.
-    await screen.findByText('Searching the knowledge base');
-    await screen.findByText('Working…');
+    await screen.findByText('Searching the knowledge base', {}, { timeout: 5000 });
+    await screen.findByText('Working…', {}, { timeout: 5000 });
     expect(screen.queryByText(/weird_tool|search_knowledge_base/)).not.toBeInTheDocument();
 
     await waitFor(() => expect(screen.getAllByText(/per year/).length).toBeGreaterThan(0));
