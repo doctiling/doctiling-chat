@@ -69,6 +69,8 @@ describe('Conversation stream (T062)', () => {
     renderApp(<Conversation kbId="kb-pol" />);
     const user = userEvent.setup();
     const box = await screen.findByRole('textbox');
+    // The composer is disabled until the session has loaded; on a slow runner typing may start before that.
+    await waitFor(() => expect(box).toBeEnabled());
     await user.type(box, 'vacation?');
     await user.click(screen.getByRole('button', { name: 'Send' }));
 
