@@ -40,7 +40,7 @@
       "body": "Los mensajes desaparecen aquí y en el estudio. El registro de acciones aplicadas se conserva.",
       "confirm": "Limpiar"
     },
-    "readOnly": "Tu acceso es de solo lectura: el agente puede responder, no modificar.",
+    "readOnly": "Tu acceso a esta base es de solo lectura: el agente puede leerla y buscar en ella, no cambiarla.",
     "empty": "Pregunta lo que quieras sobre esta base. El agente busca en cada documento que puedes ver y cita sus fuentes.",
     "you": "Tú",
     "agent": "Agente",
@@ -108,7 +108,10 @@
       "sendFailed": "No se pudo enviar la petición.",
       "clearFailed": "No se puede limpiar la conversación mientras hay una petición en curso.",
       "unknown": "Algo falló. Intenta de nuevo."
-    }
+    },
+    "readOnlyBadge": "Solo lectura",
+    "placeholderReadOnly": "Pregunta a esta base (solo lectura)…",
+    "mentionHint": "Escribe @ para dirigir la pregunta a un documento."
   },
   "sourceSheet": {
     "title": "Fuente",
@@ -172,5 +175,23 @@
     "enterHint": "Enter envía · Shift+Enter añade una línea",
     "sourcePanel": "Fuente",
     "closeSource": "Cerrar la fuente"
+  },
+  "documents": {
+    "title": "Documentos",
+    "close": "Ocultar los documentos",
+    "filter": "Filtrar documentos…",
+    "empty": "Todavía no hay documentos que puedas leer en esta base.",
+    "noMatch": "Ningún documento coincide con \"{query}\".",
+    "forbidden": "Tu acceso a esta base no permite listar sus documentos.",
+    "failed": "No se pudieron cargar los documentos.",
+    "private": "Privado",
+    "notIndexed": "Sin indexar"
+  },
+  "mentions": {
+    "picker": "Documentos a referenciar",
+    "noMatch": "Ningún documento coincide.",
+    "remove": "Quitar la referencia a {title}",
+    "references": "Documentos referenciados",
+    "limit": "Puedes referenciar hasta {max} documentos por pregunta."
   }
 }

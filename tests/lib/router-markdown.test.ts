@@ -13,12 +13,14 @@ describe('router (T061)', () => {
     expect(parseRoute('/es/chat/kb', base)).toEqual({ name: 'kbs' });
     expect(parseRoute('/es/chat/kb/abc', base)).toEqual({ name: 'conversation', kbId: 'abc' });
     expect(parseRoute('/es/chat/kb/abc/doc/d%201', base)).toEqual({ name: 'conversation', kbId: 'abc', docId: 'd 1' });
+    expect(parseRoute('/es/chat/kb/abc/docs', base)).toEqual({ name: 'documents', kbId: 'abc' });
     expect(parseRoute('/es/chat/settings', base)).toEqual({ name: 'settings' });
     expect(parseRoute('/es/chat/offline', base)).toEqual({ name: 'offline' });
     expect(parseRoute('/es/chat/nope/x', base)).toEqual({ name: 'kbs' });
     const paths = makePaths(base);
     expect(paths.kbs()).toBe('/es/chat/kb');
     expect(paths.document('a b', 'c')).toBe('/es/chat/kb/a%20b/doc/c');
+    expect(paths.documents('a b')).toBe('/es/chat/kb/a%20b/docs');
     expect(paths.settings()).toBe('/es/chat/settings');
   });
 

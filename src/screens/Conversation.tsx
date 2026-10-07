@@ -1,6 +1,8 @@
 import * as React from 'react';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Files, Trash2 } from 'lucide-react';
+import { Badge } from '@doctiling/ui/atoms/badge';
 import { Button } from '@doctiling/ui/atoms/button';
+import { SimpleTooltip } from '@doctiling/ui/molecules/tooltip';
 import { Composer } from '../components/Composer';
 import { ConfirmCard } from '../components/ConfirmCard';
 import { IconButton } from '../components/IconButton';
@@ -10,23 +12,43 @@ import { useToast } from '../components/Toast';
 import { TurnList, type LiveState } from '../components/TurnList';
 import { hasKey } from '../i18n';
 import { useLanguage } from '../i18n/use-language';
-import { ApiError, readNdjson, type Activity, type AgentBody, type AgentEvent, type Pending, type Turn } from '../lib/api';
+import { ApiError, readNdjson, type Activity, type AgentBody, type AgentEvent, type Pending, type SessionAccess, type Turn, type TurnReference } from '../lib/api';
 import { useChat } from '../lib/chat-context';
+import { useDocuments } from '../lib/documents';
+import { useIsDesktop } from '../lib/media';
 import { reportNetworkFailure, reportNetworkSuccess } from '../lib/online';
 import { navigate } from '../lib/router';
+import { Documents } from './Documents';
 import { SourceSheet } from './SourceSheet';
 
-type Props = { kbId: string; docId?: string; kbName?: string };
+type Props = {
+  kbId: string;
+  docId?: string;
+  kbName?: string;
+  /** Desktop: the documents list is open in the side panel (route /kb/:id/docs); the header toggle flips it. */
+  docsOpen?: boolean;
+};
 
 const uid = () => `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 // Same state machine as web's useKbAgent, without Next: one run at a time per
 // screen (ref guard), AbortController to stop, no automatic reconnection.
-export function Conversation({ kbId, docId, kbName }: Props) {
+export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
   const { t, language } = useLanguage();
   const { api, paths } = useChat();
   const { push } = useToast();
+  const desktop = useIsDesktop();
+  const { items: documents } = useDocuments(api, kbId);
   const [turns, setTurns] = React.useState<Turn[]>([]);
+  const [access, setAccess] = React.useState<SessionAccess | null>(null);
+  // The server persists `content` only; the tags of a question keep showing after the
+  // reload that follows a run by remembering them per question text (last one wins).
+  const referencesByQuery = React.useRef(new Map<string, TurnReference[]>());
+  const withReferences = React.useCallback((ts: Turn[]): Turn[] => {
+    const map = referencesByQuery.current;
+    if (map.size === 0) return ts;
+    return ts.map((x) => (x.role === 'user' && !x.references && map.has(x.content) ? { ...x, references: map.get(x.content) } : x));
+  }, []);
   const [pending, setPending] = React.useState<Pending | null>(null);
   const [live, setLive] = React.useState<LiveState | null>(null);
   const [running, setRunning] = React.useState(false);
@@ -67,9 +89,10 @@ export function Conversation({ kbId, docId, kbName }: Props) {
     try {
       const s = await api.session(kbId);
       reportNetworkSuccess();
-      setTurns(s.turns);
+      setTurns(withReferences(s.turns));
       setPending(s.pending);
       setRunning(s.isRunning);
+      setAccess(s.access ?? null);
       setLoadError(false);
     } catch (e) {
       if (e instanceof ApiError && e.code === 'network') reportNetworkFailure();
@@ -82,7 +105,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
     } finally {
       setLoaded(true);
     }
-  }, [api, kbId, paths, push, errorText]);
+  }, [api, kbId, paths, push, errorText, withReferences]);
 
   React.useEffect(() => {
     void load();
@@ -104,7 +127,13 @@ export function Conversation({ kbId, docId, kbName }: Props) {
       abortRef.current = controller;
       const userTurnId = uid();
       if ('query' in body) {
-        setTurns((ts) => [...ts, { id: userTurnId, role: 'user', content: body.query }]);
+        const ids = body.referencedDocumentIds ?? [];
+        const references = ids
+          .map((id) => documents?.find((d) => d.id === id))
+          .filter((d): d is NonNullable<typeof d> => !!d)
+          .map((d) => ({ id: d.id, title: d.title }));
+        if (references.length) referencesByQuery.current.set(body.query, references);
+        setTurns((ts) => [...ts, { id: userTurnId, role: 'user', content: body.query, references: references.length ? references : undefined }]);
       } else {
         setPending(null);
       }
@@ -177,7 +206,7 @@ export function Conversation({ kbId, docId, kbName }: Props) {
         if (sawDone || !controller.signal.aborted) void load();
       }
     },
-    [api, kbId, t, language, push, errorText, load],
+    [api, kbId, t, language, push, errorText, load, documents],
   );
 
   const stop = React.useCallback(() => {
@@ -200,6 +229,9 @@ export function Conversation({ kbId, docId, kbName }: Props) {
 
   const hrefFor = React.useCallback((id: string) => paths.document(kbId, id), [paths, kbId]);
   const openDoc = React.useCallback((href: string) => navigate(href), []);
+  const readOnly = access?.canWrite === false;
+  // Mobile: the icon opens the Documents screen. Desktop: it toggles the list in the side panel.
+  const toggleDocs = () => navigate(docsOpen ? paths.conversation(kbId) : paths.documents(kbId));
 
   // One column on a phone. From md the conversation column (header, turns,
   // composer) sits next to the source panel when a document is open; the
@@ -213,6 +245,16 @@ export function Conversation({ kbId, docId, kbName }: Props) {
           <ArrowLeft strokeWidth={1.75} />
         </IconButton>
         <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{resolvedName ?? t('kb.title')}</h1>
+        {readOnly && (
+          <SimpleTooltip label={t('conversation.readOnly')} side="bottom">
+            <Badge variant="secondary" tabIndex={0} data-testid="read-only-badge" className="shrink-0 cursor-default font-medium">
+              {t('conversation.readOnlyBadge')}
+            </Badge>
+          </SimpleTooltip>
+        )}
+        <IconButton label={docsOpen ? t('documents.close') : t('documents.title')} onClick={toggleDocs} aria-pressed={desktop ? docsOpen : undefined}>
+          <Files strokeWidth={1.75} />
+        </IconButton>
         <IconButton label={t('conversation.clear')} onClick={() => setClearOpen(true)} disabled={running || turns.length === 0}>
           <Trash2 strokeWidth={1.75} />
         </IconButton>
@@ -253,12 +295,14 @@ export function Conversation({ kbId, docId, kbName }: Props) {
         </div>
       </div>
       <Composer
-        onSend={(q) => void run({ query: q })}
+        onSend={(q, ids) => void run(ids.length ? { query: q, referencedDocumentIds: ids } : { query: q })}
         onStop={stop}
         running={running}
         disabled={!loaded || loadError || !!pending}
-        hint={t('conversation.hint')}
+        hint={`${t('conversation.hint')} ${t('conversation.mentionHint')}`}
+        placeholder={readOnly ? t('conversation.placeholderReadOnly') : undefined}
         prefill={prefill}
+        documents={documents}
       />
       <Sheet open={clearOpen} onOpenChange={setClearOpen} heading={t('conversation.clearConfirm.title')} description={t('conversation.clearConfirm.body')}>
         <div className="grid grid-cols-2 gap-2 pt-2">
@@ -271,7 +315,11 @@ export function Conversation({ kbId, docId, kbName }: Props) {
         </div>
       </Sheet>
       </div>
-      <SourceSheet kbId={kbId} docId={docId ?? null} onClose={() => navigate(paths.conversation(kbId), { replace: true })} />
+      {desktop && docsOpen && !docId ? (
+        <Documents kbId={kbId} variant="panel" onClose={() => navigate(paths.conversation(kbId))} />
+      ) : (
+        <SourceSheet kbId={kbId} docId={docId ?? null} onClose={() => navigate(paths.conversation(kbId), { replace: true })} />
+      )}
       </div>
     </main>
   );

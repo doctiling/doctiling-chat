@@ -14,7 +14,7 @@ by the tenant's studio at `/{locale}/chat` and switched on per tenant with `DOCT
 Pin a tag through the HTTPS tarball, like `@doctiling/landing`:
 
 ```sh
-npx -y npm@10.8.2 install @doctiling/chat@https://codeload.github.com/doctiling/doctiling-chat/tar.gz/refs/tags/v0.2.0
+npx -y npm@10.8.2 install @doctiling/chat@https://codeload.github.com/doctiling/doctiling-chat/tar.gz/refs/tags/v0.4.0
 ```
 
 Then, in web:
@@ -68,7 +68,11 @@ npm run gate        # harness self-test · docs link-check · link @doctiling/ui
 npm run icons       # regenerates public/icons/* from the brand tokens
 ```
 
-- Routes under `basePath`: `/` · `/kb` · `/kb/:id` · `/kb/:id/doc/:docId` · `/settings` · `/offline`.
+- Routes under `basePath`: `/` · `/kb` · `/kb/:id` · `/kb/:id/docs` · `/kb/:id/doc/:docId` · `/settings` · `/offline`.
+- Documents of the open base (`GET …/documents`, only what the person may read) in `src/screens/Documents.tsx`
+  (mobile screen / desktop side panel), cached once per base and reused by the composer's `@` mention picker,
+  which sends `referencedDocumentIds` next to `query` (max 10). A read-only base (`session.access.canWrite ===
+  false`) shows a "Read-only" badge in the conversation header; the server decides, the chat only shows it.
 - Responsive by **viewport size, never user agent**: below Tailwind `md` (768 px) the stacked mobile
   navigation (one screen, bottom composer, bottom sheets); from 768 px a two-column desktop shell (base list
   320 px + conversation/settings, source as a side panel, Enter sends) — `src/lib/media.ts`, `md:` classes.

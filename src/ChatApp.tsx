@@ -11,6 +11,7 @@ import { ChatProvider, type ChatContextValue } from './lib/chat-context';
 import { useIsDesktop } from './lib/media';
 import { makePaths, navigate, useRoute, type Route } from './lib/router';
 import { Conversation } from './screens/Conversation';
+import { Documents } from './screens/Documents';
 import { KnowledgeBases } from './screens/KnowledgeBases';
 import { NotEnabled } from './screens/NotEnabled';
 import { Offline } from './screens/Offline';
@@ -63,7 +64,7 @@ function useVisualViewportHeight() {
 // are the same as on a phone; only the shell differs.
 function DesktopShell({ route }: { route: Route }) {
   const { t } = useLanguage();
-  const kbId = route.name === 'conversation' ? route.kbId : undefined;
+  const kbId = route.name === 'conversation' || route.name === 'documents' ? route.kbId : undefined;
   return (
     <div className="desktop-shell" data-testid="desktop-shell">
       <div className="flex w-80 shrink-0 flex-col border-r border-border">
@@ -71,6 +72,7 @@ function DesktopShell({ route }: { route: Route }) {
       </div>
       <div className="flex min-w-0 flex-1 flex-col">
         {route.name === 'conversation' && <Conversation key={route.kbId} kbId={route.kbId} docId={route.docId} />}
+        {route.name === 'documents' && <Conversation key={route.kbId} kbId={route.kbId} docsOpen />}
         {route.name === 'settings' && <Settings />}
         {route.name === 'kbs' && (
           <section data-testid="desktop-empty" className="flex flex-1 flex-col items-center justify-center px-8 text-center">
@@ -93,6 +95,8 @@ function Router({ basePath }: { basePath: string }) {
   switch (route.name) {
     case 'conversation':
       return <Conversation key={route.kbId} kbId={route.kbId} docId={route.docId} />;
+    case 'documents':
+      return <Documents kbId={route.kbId} />;
     case 'settings':
       return <Settings />;
     case 'offline':

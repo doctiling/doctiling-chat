@@ -49,6 +49,15 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
           <Markdown markdown={rendered} onInternalLink={onOpenDoc} />
         </div>
       )}
+      {isUser && turn.references && turn.references.length > 0 && (
+        <ul className="flex max-w-[85%] flex-wrap justify-end gap-1 px-1" data-testid="turn-refs" aria-label={t('mentions.references')}>
+          {turn.references.map((r) => (
+            <li key={r.id} className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">
+              @{r.title}
+            </li>
+          ))}
+        </ul>
+      )}
       {!isUser && onPickFollowup && split.followups.length > 0 && (
         <div className="flex flex-wrap gap-2 px-1 pt-1" data-testid="followups">
           {split.followups.map((q) => (
