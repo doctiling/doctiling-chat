@@ -1,0 +1,53 @@
+{
+  "name": "@doctiling/chat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Doctiling Chat: mobile-first installable client of a tenant's /api/chat (spec 045). Pure client: no business rules live here.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server/serve.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint --max-warnings=0 .",
+    "guard:white-label": "node scripts/white-label-guard.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "gate": "sh scripts/gate.sh",
+    "hooks:install": "git config core.hooksPath .githooks"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doctiling/doctiling-chat.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@doctiling/brand": "https://codeload.github.com/doctiling/doctiling-brand/tar.gz/refs/tags/v0.1.0",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "lucide-react": "^0.475.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^20.19.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.20.0",
+    "jsdom": "^26.0.0",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "^8.24.0",
+    "vite": "^5.4.14",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,10 @@
+#!/bin/sh
+# Real pre-commit (not a .sample). Install once per clone: npm run hooks:install
+# Cheap on purpose: the full gate lives in scripts/gate.sh and in CI. Here only
+# what must never enter history.
+set -e
+
+# Protected paths: the same list the agent's protected-paths hook reads.
+git diff --cached --name-only --diff-filter=ACMR | node scripts/protected-staged.mjs
+
+echo "pre-commit: OK"

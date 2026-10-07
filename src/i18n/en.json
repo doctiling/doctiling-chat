@@ -1,0 +1,204 @@
+{
+  "app": {
+    "name": "Doctiling Chat",
+    "shortName": "Chat",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "back": "Back",
+    "close": "Close",
+    "cancel": "Cancel",
+    "openSettings": "Settings",
+    "menu": "Menu"
+  },
+  "connect": {
+    "title": "Chat with your organisation's knowledge",
+    "lead": "Doctiling Chat uses your account in {host}. There is nothing to register: connect once and ask from your phone.",
+    "leadNoHost": "Doctiling Chat uses the account you already have in your organisation's studio. There is nothing to register.",
+    "button": "Connect",
+    "buttonHint": "Open your organisation's studio to confirm it is you",
+    "connecting": "Opening your studio…",
+    "howItWorks": "How does it work?",
+    "steps": {
+      "one": "You sign in to your organisation's studio as usual.",
+      "two": "You confirm that you want to connect the chat.",
+      "three": "You come back here, identified, and see the knowledge bases shared with you."
+    },
+    "signedOut": {
+      "self": "You signed out.",
+      "invalid": "Your chat session is no longer valid. Connect again.",
+      "expired": "Your chat session expired. Connect again.",
+      "revoked": "Your access was removed. Connect again if you think this is a mistake.",
+      "chat_disabled": "The chat is not enabled for this organisation.",
+      "unknown": "Connect again to continue."
+    },
+    "callback": {
+      "title": "Connecting…",
+      "working": "Checking your access with the studio…",
+      "done": "Connected. Taking you to your knowledge bases…",
+      "openInApp": "Open in the app",
+      "openInAppHint": "You are in the browser. Open Doctiling Chat from your home screen and connect again from there.",
+      "tryAgain": "Try again"
+    },
+    "errors": {
+      "state_mismatch": "This connection did not start from this device. Start again from the chat.",
+      "missing_code": "The studio did not send a connection code. Start again.",
+      "invalid_code": "This connection link is no longer valid. Connect again.",
+      "rate_limited": "Too many attempts. Try again in a while.",
+      "chat_disabled": "The chat is not enabled for this organisation.",
+      "network": "Could not reach your organisation's studio. Check your connection and retry.",
+      "unknown": "Something went wrong while connecting. Try again."
+    }
+  },
+  "kb": {
+    "title": "Knowledge bases",
+    "subtitle": "Only what has been shared with you.",
+    "empty": {
+      "title": "Nothing shared with you yet",
+      "body": "Someone in your organisation needs to share a knowledge base with you. When they do, it appears here."
+    },
+    "documents": "{count} documents",
+    "documentsOne": "1 document",
+    "pending": "Waiting for your confirmation",
+    "running": "Working on a request",
+    "refresh": "Refresh",
+    "loadFailed": "The list could not be loaded.",
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "collaborator": "Collaborator",
+      "reader": "Read only"
+    }
+  },
+  "conversation": {
+    "placeholder": "Ask this knowledge base…",
+    "send": "Send",
+    "stop": "Stop",
+    "clear": "Clear conversation",
+    "clearConfirm": {
+      "title": "Clear this conversation?",
+      "body": "The messages disappear here and in the studio. The record of applied actions is kept.",
+      "confirm": "Clear"
+    },
+    "readOnly": "Your access is read-only: the agent can answer, not modify.",
+    "empty": "Ask anything about this knowledge base. The agent searches every document you can see and cites its sources.",
+    "you": "You",
+    "agent": "Agent",
+    "working": "Working…",
+    "thinking": "Thinking…",
+    "truncated": "The request reached its step limit. The agent stopped and reported what was done and what is left.",
+    "rejectedNote": "You rejected the proposed change. Nothing was changed.",
+    "hint": "The agent can make mistakes. Check the cited sources.",
+    "loadFailed": "The conversation could not be loaded.",
+    "source": "Source",
+    "activity": {
+      "searching": "Searching the knowledge base",
+      "consulting": "Consulting the knowledge base",
+      "readingDocument": "Reading a document",
+      "checkingIndex": "Checking index status",
+      "listingCollections": "Listing collections",
+      "listingDocuments": "Listing documents",
+      "readingGraph": "Reading the graph",
+      "creatingDocument": "Creating a document",
+      "editingDocument": "Editing a document",
+      "editingGraph": "Editing the graph",
+      "editingTable": "Editing the table",
+      "organizing": "Organizing collections",
+      "renamingDocument": "Renaming a document",
+      "restoringDocument": "Restoring from the trash",
+      "proposingDelete": "Proposing a deletion",
+      "usingCustomTool": "Using your tool",
+      "searchingWeb": "Searching the web",
+      "drawingDiagram": "Drawing a diagram",
+      "buildingTable": "Building a table",
+      "extracting": "Extracting structured data",
+      "calculating": "Calculating",
+      "measuringText": "Measuring the text",
+      "processingResults": "Processing the results"
+    },
+    "confirm": {
+      "title": "The agent asks for your approval",
+      "approve": "Confirm",
+      "reject": "Reject",
+      "approveHint": "Run this change",
+      "rejectHint": "Keep everything as it is",
+      "summary": {
+        "delete_document": "Delete the document \"{name}\" (recoverable from the trash)",
+        "delete_collection": "Delete the collection \"{name}\" (its documents are kept)",
+        "delete_block": "Delete a block from \"{name}\"",
+        "delete_graph_entity": "Delete the entity \"{name}\" from the graph",
+        "delete_graph_relation": "Delete a relation of \"{name}\" from the graph",
+        "delete_table_row": "Delete a row from the table \"{name}\"",
+        "generic": "Apply the proposed change to \"{name}\""
+      }
+    },
+    "errors": {
+      "runInProgress": "A request is already running for this knowledge base. Stop it or wait for it to finish.",
+      "confirmationPending": "There is a pending confirmation. Confirm or reject it before sending a new request.",
+      "staleConfirmation": "That confirmation no longer applies.",
+      "forbidden": "Your access to this knowledge base does not allow that.",
+      "attachments_not_supported": "Attachments are not available in the chat.",
+      "quota_exceeded": "You reached your daily limit of requests. Try again tomorrow or ask your administrator.",
+      "credit_exceeded": "Your organisation ran out of credit for the assistant. Ask your administrator.",
+      "tool_error": "One of the steps failed. Try again with a more specific question.",
+      "refusal": "The assistant cannot help with that request.",
+      "overloaded": "The assistant is busy right now. Try again in a moment.",
+      "network": "The connection dropped before the answer finished.",
+      "aborted": "Stopped.",
+      "sendFailed": "The request could not be sent.",
+      "clearFailed": "The conversation could not be cleared while a request is running.",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
+  "sourceSheet": {
+    "title": "Source",
+    "loading": "Opening the document…",
+    "forbidden": "You do not have permission to read this document.",
+    "notFound": "This document is not in the knowledge base any more.",
+    "failed": "The document could not be opened.",
+    "type": {
+      "text": "Document",
+      "database": "Table",
+      "graph": "Graph"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "account": "Account",
+    "tenant": "Organisation",
+    "role": {
+      "admin": "Administrator",
+      "collaborator": "Collaborator",
+      "guest": "Guest"
+    },
+    "sessionUntil": "Session valid until {date}",
+    "language": "Language",
+    "languages": {
+      "en": "English",
+      "es": "Español"
+    },
+    "version": "Version",
+    "signOut": "Sign out",
+    "signOutHint": "Disconnect this device from your organisation's chat",
+    "signingOut": "Signing out…",
+    "install": "Install the app",
+    "loadFailed": "Your account could not be loaded."
+  },
+  "offline": {
+    "banner": "You are offline. Nothing is served from a local copy.",
+    "retry": "Retry",
+    "title": "No connection",
+    "body": "Doctiling Chat needs a connection to your organisation. Nothing is stored on this device, so there is nothing to show while offline."
+  },
+  "pwa": {
+    "install": "Install",
+    "installHint": "Add Doctiling Chat to your home screen",
+    "updateAvailable": "A new version is ready.",
+    "update": "Update",
+    "updateHint": "Reload with the new version; you stay signed in",
+    "ios": {
+      "title": "Install on your iPhone",
+      "body": "Tap Share, then \"Add to Home Screen\". The chat opens full screen and keeps you signed in.",
+      "dismiss": "Not now"
+    }
+  }
+}

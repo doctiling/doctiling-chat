@@ -1,0 +1,93 @@
+Doctiling — Proprietary Software License Agreement
+Copyright (c) 2026 Doctiling. All rights reserved.
+
+This software is proprietary and confidential. It is licensed, not sold. It is
+NOT open source: no rights are granted by the mere fact that you possess a copy,
+whether you obtained it as a self-host release, a container image, a source
+archive, or by any other means.
+
+By installing, running, or otherwise using the software you accept this
+agreement. If you do not accept it, do not install or use the software, and
+delete every copy you hold.
+
+1. LICENSE GRANTED
+
+Subject to your compliance with this agreement, Doctiling grants you a personal,
+non-exclusive, non-transferable, revocable license to install and run one or
+more instances of the software on infrastructure you control, for your own
+internal business use, and to store and process your own data with it.
+
+This is the whole of the grant. Rights not granted here are withheld.
+
+2. RESTRICTIONS
+
+You may not, and may not permit anyone else to:
+
+  a. Redistribute, publish, sell, resell, rent, lease, lend, sublicense,
+     assign, or otherwise make the software available to any third party,
+     whether for a fee or free of charge.
+
+  b. Operate the software as a hosted, managed, or multi-tenant service for
+     third parties, including any offering competitive with Doctiling.
+
+  c. Reverse engineer, decompile, disassemble, deobfuscate, or otherwise
+     attempt to reconstruct the source code, algorithms, prompts, data schemas,
+     or internal design of the software, except to the narrow extent that such
+     an act cannot lawfully be prohibited under applicable mandatory law.
+
+  d. Copy, adapt, translate, or create derivative works of the software, other
+     than the configuration expressly supported by its own settings files.
+
+  e. Remove, alter, or obscure any copyright notice, trademark, brand, build
+     identifier, provenance file, or other marking contained in the software,
+     or represent the software as your own product.
+
+  f. Use the software to develop a competing product, or disclose to any third
+     party any benchmark, evaluation, prompt, or internal detail of it.
+
+  g. Circumvent or disable any license, quota, safety, or security mechanism.
+
+3. OWNERSHIP
+
+The software, and every copy of it, remains the exclusive property of
+Doctiling. Your data is yours: this agreement grants Doctiling no right in the
+content you store or process with the software, and a self-host install
+transmits no such content to Doctiling.
+
+4. THIRD-PARTY COMPONENTS
+
+The software includes third-party open-source components, each governed by its
+own license. Those licenses continue to apply to those components and are
+unaffected by this agreement; nothing here restricts a right granted to you
+directly by such a license.
+
+5. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. You are responsible for
+your own deployment, for the keys and credentials you configure in it, and for
+backing up your data.
+
+6. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, DOCTILING SHALL NOT BE LIABLE FOR ANY
+INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, NOR FOR ANY
+LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATED TO THE SOFTWARE.
+
+7. TERMINATION
+
+This license terminates automatically if you breach any term of it. On
+termination you must stop using the software and delete every copy you hold.
+Your data remains yours and is not affected.
+
+8. AI PROVIDERS
+
+The software can be configured to send your content to third-party AI providers
+whose keys you supply. Those calls are governed by your agreement with that
+provider, not by this one. A fully local configuration sends nothing outward.
+
+9. CONTACT
+
+Questions about this license, or a use it does not permit that you would like
+permitted: support@doctiling.app

@@ -1,0 +1,204 @@
+{
+  "app": {
+    "name": "Doctiling Chat",
+    "shortName": "Chat",
+    "loading": "Cargando…",
+    "retry": "Reintentar",
+    "back": "Volver",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "openSettings": "Ajustes",
+    "menu": "Menú"
+  },
+  "connect": {
+    "title": "Conversa con el conocimiento de tu organización",
+    "lead": "Doctiling Chat usa tu cuenta de {host}. No hay nada que registrar: conecta una vez y pregunta desde el teléfono.",
+    "leadNoHost": "Doctiling Chat usa la cuenta que ya tienes en el estudio de tu organización. No hay nada que registrar.",
+    "button": "Conectar",
+    "buttonHint": "Abre el estudio de tu organización para confirmar que eres tú",
+    "connecting": "Abriendo tu estudio…",
+    "howItWorks": "¿Cómo funciona?",
+    "steps": {
+      "one": "Entras al estudio de tu organización como siempre.",
+      "two": "Confirmas que quieres conectar el chat.",
+      "three": "Vuelves aquí identificada y ves las bases que te compartieron."
+    },
+    "signedOut": {
+      "self": "Cerraste sesión.",
+      "invalid": "Tu sesión del chat ya no es válida. Conecta de nuevo.",
+      "expired": "Tu sesión del chat venció. Conecta de nuevo.",
+      "revoked": "Tu acceso fue retirado. Conecta de nuevo si crees que es un error.",
+      "chat_disabled": "El chat no está habilitado para esta organización.",
+      "unknown": "Conecta de nuevo para continuar."
+    },
+    "callback": {
+      "title": "Conectando…",
+      "working": "Comprobando tu acceso con el estudio…",
+      "done": "Conectado. Te llevamos a tus bases…",
+      "openInApp": "Abrir en la app",
+      "openInAppHint": "Estás en el navegador. Abre Doctiling Chat desde tu pantalla de inicio y conecta de nuevo desde allí.",
+      "tryAgain": "Intentar de nuevo"
+    },
+    "errors": {
+      "state_mismatch": "Esta conexión no empezó en este dispositivo. Empieza de nuevo desde el chat.",
+      "missing_code": "El estudio no envió el código de conexión. Empieza de nuevo.",
+      "invalid_code": "Este enlace de conexión ya no es válido. Conecta de nuevo.",
+      "rate_limited": "Demasiados intentos. Prueba de nuevo en un rato.",
+      "chat_disabled": "El chat no está habilitado para esta organización.",
+      "network": "No se pudo llegar al estudio de tu organización. Revisa tu conexión y reintenta.",
+      "unknown": "Algo falló al conectar. Intenta de nuevo."
+    }
+  },
+  "kb": {
+    "title": "Bases de conocimiento",
+    "subtitle": "Solo lo que te han compartido.",
+    "empty": {
+      "title": "Aún no te han compartido nada",
+      "body": "Alguien de tu organización tiene que compartirte una base de conocimiento. Cuando lo haga, aparece aquí."
+    },
+    "documents": "{count} documentos",
+    "documentsOne": "1 documento",
+    "pending": "Esperando tu confirmación",
+    "running": "Trabajando en una petición",
+    "refresh": "Actualizar",
+    "loadFailed": "No se pudo cargar la lista.",
+    "role": {
+      "owner": "Propietaria",
+      "admin": "Admin",
+      "collaborator": "Colaboración",
+      "reader": "Solo lectura"
+    }
+  },
+  "conversation": {
+    "placeholder": "Pregunta a esta base…",
+    "send": "Enviar",
+    "stop": "Detener",
+    "clear": "Limpiar conversación",
+    "clearConfirm": {
+      "title": "¿Limpiar esta conversación?",
+      "body": "Los mensajes desaparecen aquí y en el estudio. El registro de acciones aplicadas se conserva.",
+      "confirm": "Limpiar"
+    },
+    "readOnly": "Tu acceso es de solo lectura: el agente puede responder, no modificar.",
+    "empty": "Pregunta lo que quieras sobre esta base. El agente busca en cada documento que puedes ver y cita sus fuentes.",
+    "you": "Tú",
+    "agent": "Agente",
+    "working": "Trabajando…",
+    "thinking": "Pensando…",
+    "truncated": "La petición alcanzó su límite de pasos. El agente se detuvo e informó qué hizo y qué falta.",
+    "rejectedNote": "Rechazaste el cambio propuesto. No se cambió nada.",
+    "hint": "El agente puede equivocarse. Revisa las fuentes citadas.",
+    "loadFailed": "No se pudo cargar la conversación.",
+    "source": "Fuente",
+    "activity": {
+      "searching": "Buscando en la base de conocimiento",
+      "consulting": "Consultando la base de conocimiento",
+      "readingDocument": "Leyendo un documento",
+      "checkingIndex": "Comprobando el estado del índice",
+      "listingCollections": "Listando colecciones",
+      "listingDocuments": "Listando documentos",
+      "readingGraph": "Leyendo el grafo",
+      "creatingDocument": "Creando un documento",
+      "editingDocument": "Editando un documento",
+      "editingGraph": "Editando el grafo",
+      "editingTable": "Editando la tabla",
+      "organizing": "Organizando colecciones",
+      "renamingDocument": "Renombrando un documento",
+      "restoringDocument": "Restaurando de la papelera",
+      "proposingDelete": "Proponiendo un borrado",
+      "usingCustomTool": "Usando tu herramienta",
+      "searchingWeb": "Buscando en la web",
+      "drawingDiagram": "Dibujando un diagrama",
+      "buildingTable": "Construyendo una tabla",
+      "extracting": "Extrayendo datos estructurados",
+      "calculating": "Calculando",
+      "measuringText": "Midiendo el texto",
+      "processingResults": "Procesando los resultados"
+    },
+    "confirm": {
+      "title": "El agente pide tu aprobación",
+      "approve": "Confirmar",
+      "reject": "Rechazar",
+      "approveHint": "Ejecutar este cambio",
+      "rejectHint": "Dejar todo como está",
+      "summary": {
+        "delete_document": "Borrar el documento \"{name}\" (recuperable desde la papelera)",
+        "delete_collection": "Borrar la colección \"{name}\" (sus documentos se conservan)",
+        "delete_block": "Borrar un bloque de \"{name}\"",
+        "delete_graph_entity": "Borrar la entidad \"{name}\" del grafo",
+        "delete_graph_relation": "Borrar una relación de \"{name}\" del grafo",
+        "delete_table_row": "Borrar una fila de la tabla \"{name}\"",
+        "generic": "Aplicar el cambio propuesto a \"{name}\""
+      }
+    },
+    "errors": {
+      "runInProgress": "Ya hay una petición en curso para esta base. Detenla o espera a que termine.",
+      "confirmationPending": "Hay una confirmación pendiente. Confírmala o recházala antes de enviar otra petición.",
+      "staleConfirmation": "Esa confirmación ya no aplica.",
+      "forbidden": "Tu acceso a esta base no permite eso.",
+      "attachments_not_supported": "Los adjuntos no están disponibles en el chat.",
+      "quota_exceeded": "Alcanzaste tu límite diario de peticiones. Prueba mañana o habla con tu administración.",
+      "credit_exceeded": "Tu organización se quedó sin crédito para el asistente. Habla con tu administración.",
+      "tool_error": "Uno de los pasos falló. Prueba con una pregunta más concreta.",
+      "refusal": "El asistente no puede ayudar con esa petición.",
+      "overloaded": "El asistente está ocupado ahora mismo. Prueba en un momento.",
+      "network": "La conexión se cortó antes de terminar la respuesta.",
+      "aborted": "Detenido.",
+      "sendFailed": "No se pudo enviar la petición.",
+      "clearFailed": "No se puede limpiar la conversación mientras hay una petición en curso.",
+      "unknown": "Algo falló. Intenta de nuevo."
+    }
+  },
+  "sourceSheet": {
+    "title": "Fuente",
+    "loading": "Abriendo el documento…",
+    "forbidden": "No tienes permiso para leer este documento.",
+    "notFound": "Este documento ya no está en la base.",
+    "failed": "No se pudo abrir el documento.",
+    "type": {
+      "text": "Documento",
+      "database": "Tabla",
+      "graph": "Grafo"
+    }
+  },
+  "settings": {
+    "title": "Ajustes",
+    "account": "Cuenta",
+    "tenant": "Organización",
+    "role": {
+      "admin": "Administración",
+      "collaborator": "Colaboración",
+      "guest": "Invitada"
+    },
+    "sessionUntil": "Sesión válida hasta {date}",
+    "language": "Idioma",
+    "languages": {
+      "en": "English",
+      "es": "Español"
+    },
+    "version": "Versión",
+    "signOut": "Cerrar sesión",
+    "signOutHint": "Desconectar este dispositivo del chat de tu organización",
+    "signingOut": "Cerrando sesión…",
+    "install": "Instalar la app",
+    "loadFailed": "No se pudo cargar tu cuenta."
+  },
+  "offline": {
+    "banner": "Sin conexión. No se muestra nada desde una copia local.",
+    "retry": "Reintentar",
+    "title": "Sin conexión",
+    "body": "Doctiling Chat necesita conexión con tu organización. Nada se guarda en este dispositivo, así que no hay nada que mostrar sin red."
+  },
+  "pwa": {
+    "install": "Instalar",
+    "installHint": "Añade Doctiling Chat a tu pantalla de inicio",
+    "updateAvailable": "Hay una versión nueva lista.",
+    "update": "Actualizar",
+    "updateHint": "Recarga con la versión nueva; sigues identificada",
+    "ios": {
+      "title": "Instala en tu iPhone",
+      "body": "Toca Compartir y luego \"Añadir a pantalla de inicio\". El chat se abre a pantalla completa y conserva tu sesión.",
+      "dismiss": "Ahora no"
+    }
+  }
+}

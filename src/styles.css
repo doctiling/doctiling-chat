@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Values mirror @doctiling/brand lightColors / darkColors (tests/pwa/manifest.test.ts
+   checks theme-color against the token). Dark mode follows the system. */
+:root {
+  --color-background: #fbfaf9;
+  --color-foreground: #212e3b;
+  --color-card: #ffffff;
+  --color-cardForeground: #212e3b;
+  --color-popover: #ffffff;
+  --color-popoverForeground: #212e3b;
+  --color-primary: #798a75;
+  --color-primaryForeground: #f6f7f9;
+  --color-secondary: #f2f1ed;
+  --color-secondaryForeground: #212e3b;
+  --color-muted: #f0eeea;
+  --color-mutedForeground: #53606e;
+  --color-accent: #2c3d4e;
+  --color-accentForeground: #f6f7f9;
+  --color-destructive: #be4037;
+  --color-destructiveForeground: #f6f7f9;
+  --color-border: #e2dfd9;
+  --color-input: #e2dfd9;
+  --color-ring: #849a7e;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #181f25;
+    --color-foreground: #e8e2d9;
+    --color-card: #1e262f;
+    --color-cardForeground: #e8e2d9;
+    --color-popover: #1e262f;
+    --color-popoverForeground: #e8e2d9;
+    --color-primary: #92a58d;
+    --color-primaryForeground: #181f25;
+    --color-secondary: #2e3842;
+    --color-secondaryForeground: #e8e2d9;
+    --color-muted: #2a333c;
+    --color-mutedForeground: #b0a99b;
+    --color-accent: #c2b3a3;
+    --color-accentForeground: #181f25;
+    --color-destructive: #bf4840;
+    --color-destructiveForeground: #f0ece6;
+    --color-border: #36424e;
+    --color-input: #36424e;
+    --color-ring: #92a58d;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+  /* The installed app owns the whole screen: respect the notch and the home bar. */
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Fixed shell: header + scrolling list + composer pinned to the keyboard. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  height: var(--app-height, 100dvh);
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-anchor: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
+.prose-chat p {
+  margin: 0 0 0.6em;
+}
+.prose-chat p:last-child {
+  margin-bottom: 0;
+}
+.prose-chat ul,
+.prose-chat ol {
+  margin: 0.25em 0 0.6em 1.25em;
+}
+.prose-chat ul {
+  list-style: disc;
+}
+.prose-chat ol {
+  list-style: decimal;
+}
+.prose-chat code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--color-muted);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+.prose-chat pre {
+  background: var(--color-muted);
+  padding: 0.75rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.prose-chat pre code {
+  background: transparent;
+  padding: 0;
+}
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3 {
+  font-family: Fraunces, Georgia, serif;
+  font-weight: 600;
+  margin: 0.8em 0 0.3em;
+  line-height: 1.25;
+}
+.prose-chat h1 {
+  font-size: 1.25rem;
+}
+.prose-chat h2 {
+  font-size: 1.125rem;
+}
+.prose-chat h3 {
+  font-size: 1rem;
+}
+.prose-chat table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.875rem;
+  margin: 0.5em 0;
+}
+.prose-chat th,
+.prose-chat td {
+  border: 1px solid var(--color-border);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-chat a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-chat blockquote {
+  border-left: 3px solid var(--color-border);
+  margin: 0.5em 0;
+  padding-left: 0.75rem;
+  color: var(--color-mutedForeground);
+}
+
+@keyframes pulse-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.typing-dot {
+  animation: pulse-dot 1.2s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
