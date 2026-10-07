@@ -4,7 +4,7 @@ Printed by the `SessionStart` hook. **Only what a command verified goes here**; 
 under "Known debt". The harness self-test fails if the commit cited below is more than 25 commits
 behind HEAD.
 
-- **Last full gate:** 2026-10-07, branch `main`, working tree before the first commit (sobre `0000000` —
+- **Last full gate:** 2026-10-07, branch `main`, working tree before the first commit (sobre `a477ca0` —
   replace with the hash of the first commit; until then the self-test reports that one check as omitted)
 - **Verdict:** GREEN (`npm run gate`: harness self-test · docs link-check · white-label guard · lint ·
   typecheck · tests · build)
