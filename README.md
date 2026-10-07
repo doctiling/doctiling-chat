@@ -69,6 +69,9 @@ npm run icons       # regenerates public/icons/* from the brand tokens
 ```
 
 - Routes under `basePath`: `/` · `/kb` · `/kb/:id` · `/kb/:id/doc/:docId` · `/settings` · `/offline`.
+- Responsive by **viewport size, never user agent**: below Tailwind `md` (768 px) the stacked mobile
+  navigation (one screen, bottom composer, bottom sheets); from 768 px a two-column desktop shell (base list
+  320 px + conversation/settings, source as a side panel, Enter sends) — `src/lib/media.ts`, `md:` classes.
 - Copy: `src/i18n/{en,es}.json`. Principles: `CONSTITUTION.md`. Debt: `DEBT.md`. Operations: `docs/runbook.md`.
 - Tests: vitest + Testing Library; `tests/pwa.test.ts` runs the generated worker in a fake worker scope.
 

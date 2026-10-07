@@ -165,5 +165,12 @@
     "title": "The chat is not enabled here",
     "body": "Your organisation has not switched on Doctiling Chat for this space. The studio keeps working as usual.",
     "cta": "Go to the studio"
+  },
+  "desktop": {
+    "pickBase": "Pick a knowledge base to start",
+    "pickBaseBody": "Your conversations open here, next to the list.",
+    "enterHint": "Enter sends · Shift+Enter adds a line",
+    "sourcePanel": "Source",
+    "closeSource": "Close the source"
   }
 }

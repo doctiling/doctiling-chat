@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { Conversation } from '../../src/screens/Conversation';
-import { json, mockFetch, ndjson, on, renderApp, sessionStore } from '../helpers/render';
+import { json, mockFetch, ndjson, on, renderApp, sessionStore, setViewport } from '../helpers/render';
 
 // T065 — double tap on send → one request; 409 runInProgress → notice. [TS-409, TS-410]
 describe('Conversation lock (T065)', () => {
@@ -31,7 +31,8 @@ describe('Conversation lock (T065)', () => {
     expect(screen.getAllByTestId('turn').filter((t) => t.dataset.role === 'user')).toHaveLength(1);
   });
 
-  it('Enter sends once and Shift+Enter does not send', async () => {
+  it('[TS-460] on desktop, Enter sends once and Shift+Enter does not send', async () => {
+    setViewport('desktop');
     const { calls } = mockFetch([
       { match: on('GET', /\/session$/), respond: () => json({ turns: [], actions: [], pending: null, isRunning: false }) },
       { match: on('POST', /\/agent$/), respond: () => ndjson([{ status: 'Done', role: 'system' }]) },

@@ -39,12 +39,13 @@ export function Settings() {
   return (
     <main className="app-shell">
       <header className="flex items-center gap-1 border-b border-border px-2 py-1.5">
-        <IconButton label={t('app.back')} onClick={() => navigate(paths.kbs())}>
+        <IconButton label={t('app.back')} onClick={() => navigate(paths.kbs())} className="md:hidden">
           <ArrowLeft strokeWidth={1.75} />
         </IconButton>
-        <h1 className="font-display text-lg font-semibold">{t('settings.title')}</h1>
+        <h1 className="font-display text-lg font-semibold md:px-2">{t('settings.title')}</h1>
       </header>
       <div className="scroll-area safe-bottom px-4 py-4">
+        <div className="mx-auto w-full md:max-w-[760px]">
         <section className="rounded-xl border border-border bg-card p-4 text-card-foreground">
           <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('settings.account')}</h2>
           {me ? (
@@ -115,6 +116,7 @@ export function Settings() {
               </a>
             </Button>
           </SimpleTooltip>
+        </div>
         </div>
       </div>
     </main>

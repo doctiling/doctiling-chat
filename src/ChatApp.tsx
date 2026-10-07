@@ -1,13 +1,15 @@
 'use client';
 
 import * as React from 'react';
+import { BookOpen } from 'lucide-react';
 import { ToastProvider } from './components/Toast';
 import { UpdateToast } from './components/UpdateToast';
 import type { Language } from './i18n';
-import { LanguageProvider } from './i18n/use-language';
+import { LanguageProvider, useLanguage } from './i18n/use-language';
 import { createChatApi } from './lib/api';
 import { ChatProvider, type ChatContextValue } from './lib/chat-context';
-import { makePaths, navigate, useRoute } from './lib/router';
+import { useIsDesktop } from './lib/media';
+import { makePaths, navigate, useRoute, type Route } from './lib/router';
 import { Conversation } from './screens/Conversation';
 import { KnowledgeBases } from './screens/KnowledgeBases';
 import { NotEnabled } from './screens/NotEnabled';
@@ -55,10 +57,39 @@ function useVisualViewportHeight() {
   }, []);
 }
 
+// Desktop (≥ md, decided by viewport size, never by user agent): the base list
+// stays in a 320 px left column and the route decides the right column —
+// conversation, settings or the "pick a base" empty state. Routes and basePath
+// are the same as on a phone; only the shell differs.
+function DesktopShell({ route }: { route: Route }) {
+  const { t } = useLanguage();
+  const kbId = route.name === 'conversation' ? route.kbId : undefined;
+  return (
+    <div className="desktop-shell" data-testid="desktop-shell">
+      <div className="flex w-80 shrink-0 flex-col border-r border-border">
+        <KnowledgeBases variant="sidebar" selectedId={kbId} />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        {route.name === 'conversation' && <Conversation key={route.kbId} kbId={route.kbId} docId={route.docId} />}
+        {route.name === 'settings' && <Settings />}
+        {route.name === 'kbs' && (
+          <section data-testid="desktop-empty" className="flex flex-1 flex-col items-center justify-center px-8 text-center">
+            <BookOpen className="h-10 w-10 text-muted-foreground" strokeWidth={1.25} aria-hidden="true" />
+            <h2 className="mt-4 font-display text-lg font-semibold">{t('desktop.pickBase')}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t('desktop.pickBaseBody')}</p>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Router({ basePath }: { basePath: string }) {
   const route = useRoute(basePath);
   const paths = React.useMemo(() => makePaths(basePath), [basePath]);
+  const desktop = useIsDesktop();
   useVisualViewportHeight();
+  if (desktop && route.name !== 'offline') return <DesktopShell route={route} />;
   switch (route.name) {
     case 'conversation':
       return <Conversation key={route.kbId} kbId={route.kbId} docId={route.docId} />;
