@@ -1,5 +1,5 @@
 // Local storage of the chat: preferences only (last opened base, iOS hint
-// dismissed). There is no token — the studio session cookie is the session —
+// dismissed, list grouping). There is no token — the studio session cookie is the session —
 // and nothing of business (conversations, bases, documents) is ever stored on
 // the device. Every access is wrapped: private mode, blocked storage and old
 // browsers must never crash the app.
@@ -9,6 +9,8 @@ export const PREFS_KEY = 'doctiling-chat:prefs';
 export type Prefs = {
   lastKbId?: string;
   iosHintDismissed?: boolean;
+  /** How the base list is shown: flat (default) or grouped by the person's access. */
+  groupBy?: 'none' | 'access';
 };
 
 function localGet<T>(key: string): T | null {

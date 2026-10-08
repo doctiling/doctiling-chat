@@ -28,6 +28,13 @@
       "admin": "Admin",
       "collaborator": "Collaborator",
       "reader": "Read only"
+    },
+    "group": "Group by access",
+    "ungroup": "Show as a list",
+    "groups": {
+      "manage": "You manage",
+      "collaborate": "You collaborate",
+      "read": "Read only"
     }
   },
   "conversation": {
@@ -193,5 +200,10 @@
     "remove": "Remove the reference to {title}",
     "references": "Referenced documents",
     "limit": "You can reference up to {max} documents per question."
+  },
+  "share": {
+    "conversation": "Share a link to this base",
+    "copied": "Link copied. Only people with access to this base can open it.",
+    "failed": "The link could not be shared."
   }
 }

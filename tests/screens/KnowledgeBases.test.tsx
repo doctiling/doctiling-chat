@@ -1,8 +1,8 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { KnowledgeBases } from '../../src/screens/KnowledgeBases';
-import { getPrefs } from '../../src/lib/storage';
+import { getPrefs, setPrefs } from '../../src/lib/storage';
 import { json, mockFetch, on, renderApp } from '../helpers/render';
 
 const items = [
@@ -59,5 +59,35 @@ describe('KnowledgeBases screen (T060)', () => {
     fail = false;
     await userEvent.setup().click(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByText('Políticas')).toBeInTheDocument();
+  });
+
+  it('groups the bases by access and remembers the choice', async () => {
+    mockFetch([{ match: on('GET', '/api/chat/knowledge-bases'), respond: () => json({ items }) }]);
+    renderApp(<KnowledgeBases />);
+    await screen.findByText('Políticas');
+    const toggle = screen.getByRole('button', { name: 'Group by access' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.setup().click(toggle);
+    const groups = screen.getAllByRole('region').map((r) => r.getAttribute('data-testid'));
+    expect(groups).toEqual(['kb-group-manage', 'kb-group-collaborate', 'kb-group-read']);
+    expect(within(screen.getByRole('region', { name: /you manage/i })).getByText('Ops')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: /you collaborate/i })).getByText('Finanzas')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: /read only/i })).getByText('Políticas')).toBeInTheDocument();
+    expect(getPrefs().groupBy).toBe('access');
+    expect(screen.getByRole('button', { name: 'Show as a list' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('starts grouped when that was the last choice, and hides empty groups', async () => {
+    setPrefs({ groupBy: 'access' });
+    mockFetch([{ match: on('GET', '/api/chat/knowledge-bases'), respond: () => json({ items: [items[0]] }) }]);
+    renderApp(<KnowledgeBases />);
+    await screen.findByText('Políticas');
+    expect(screen.getAllByRole('region').map((r) => r.getAttribute('data-testid'))).toEqual(['kb-group-read']);
+  });
+
+  it('shows the whole title, not a truncated one', async () => {
+    mockFetch([{ match: on('GET', '/api/chat/knowledge-bases'), respond: () => json({ items }) }]);
+    renderApp(<KnowledgeBases variant="sidebar" />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Knowledge bases' })).not.toHaveClass('truncate');
   });
 });
