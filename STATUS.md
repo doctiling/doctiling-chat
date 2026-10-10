@@ -1,12 +1,13 @@
 # STATUS — verified state (doctiling-chat)
 
 Printed by the `SessionStart` hook. **Only what a command verified goes here**; what is assumed goes
-under "Known debt". The harness self-test fails if the commit cited below is more than 25 commits
-behind HEAD.
+under "Known debt". `node scripts/drift-check.mjs` (scheduled, `.github/workflows/drift.yml`) fails when the
+date below is older than 14 days.
 
-- **Last full gate:** 2026-10-07, branch `feat/share-group-header` (working tree), sobre `5576a67`
-- **Verdict:** GREEN (`npm run gate`: harness self-test · docs link-check · link @doctiling/ui · white-label
-  guard · lint · typecheck · tests — 116 tests, 22 files)
+- **Last full gate:** 2026-10-10, branch `chore/port-agent-harness`, sobre `2cf1fe5`
+- **Verdict:** GREEN (`npm run gate` = `node scripts/gate.mjs`: harness self-test · docs link-check · convention
+  lint · artifacts in place · link @doctiling/ui · white-label guard · lint · typecheck · tests — 116 tests,
+  22 files · hook latency; code index **omitted**, no `.codegraph`). Harness ported to agent-harness@c27445b.
 - **Share, group-by-access and the untruncated list title verified in jsdom** (`Conversation.share.test.tsx`,
   `KnowledgeBases.test.tsx`): share sheet with name + conversation URL, clipboard fallback with notice,
   silent on cancel, error when both fail; groups in order manage → collaborate → read, empty ones hidden,

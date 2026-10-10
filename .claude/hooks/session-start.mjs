@@ -1,39 +1,65 @@
-// SessionStart: load verified project state instead of re-deriving it, and
-// self-check the harness (a hook that isn't installed is "instalado y muerto").
-// Config: .claude/harness.config.json.
+#!/usr/bin/env node
+/**
+ * SessionStart — estado verificado al empezar, para no releer el repo entero.
+ *
+ * Imprime rama, commit, cambios sin commitear, STATUS.md y las alertas del arnés
+ * (pre-commit sin instalar, gate pendiente). Todo lo que salga por stdout entra
+ * al contexto: se mantiene corto a propósito.
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { readInput, loadConfig, allow, REPO_ROOT } from "./harness.mjs";
 
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import path from 'node:path';
-import { loadConfig, readPayload, context, markerPath } from './harness.mjs';
+await readInput();
+const config = loadConfig() ?? {};
 
-const payload = (await readPayload()) ?? {};
-const cfg = loadConfig();
-const root = payload.cwd ?? process.cwd();
+const git = (args) => spawnSync("git", args, { cwd: REPO_ROOT, encoding: "utf8" }).stdout?.trim() ?? "";
 
-const git = (args) => {
-  try {
-    return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
-  } catch {
-    return '';
-  }
-};
+const lines = ["## Estado del repo (hook SessionStart)"];
 
-const lines = [];
-lines.push(`rama: ${git(['rev-parse', '--abbrev-ref', 'HEAD']) || '?'} · último commit: ${git(['log', '-1', '--oneline']) || '?'}`);
-lines.push(`archivos con cambios sin commitear: ${git(['status', '--porcelain']).split('\n').filter(Boolean).length}`);
+const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
+const head = git(["log", "-1", "--pretty=%h %s"]);
+const dirty = git(["status", "--porcelain"]).split("\n").filter(Boolean);
 
-if (git(['config', 'core.hooksPath']) !== cfg.hooksPath) {
-  lines.push(`AVISO: pre-commit NO instalado (core.hooksPath ≠ ${cfg.hooksPath}). Corre \`${cfg.hooksInstallCommand}\`.`);
+lines.push(`- Rama: \`${branch}\` · HEAD: ${head}`);
+lines.push(
+  dirty.length
+    ? `- Sin commitear: ${dirty.length} archivo(s) — ${dirty.slice(0, 5).map((l) => l.slice(3)).join(", ")}${dirty.length > 5 ? ", …" : ""}`
+    : "- Working tree limpio.",
+);
+
+// Alerta: el pre-commit del repo tiene que estar realmente instalado (no .sample).
+const hooksPath = git(["config", "core.hooksPath"]);
+if (hooksPath !== ".githooks") {
+  // El comando de instalación sale del config: `npm run hooks:install` no existe en un
+  // repo de .NET o de Java, y un aviso que nombra un comando inexistente se ignora.
+  const instalar = config.gate?.installHooksCommand ?? "git config core.hooksPath .githooks";
+  lines.push(`- ⚠️ pre-commit NO instalado (\`core.hooksPath\` ≠ \`.githooks\`). Corré \`${instalar}\`.`);
 }
 
-if (existsSync(markerPath(root, cfg.gate.marker))) {
-  lines.push(`AVISO: hay ediciones sin gate verde pendientes (${cfg.gate.marker}). Corre \`${cfg.gate.command}\`.`);
+// Alerta: gate pendiente de una sesión anterior.
+const marker = path.join(REPO_ROOT, config.gate?.marker ?? ".git/gate-dirty");
+if (fs.existsSync(marker)) {
+  lines.push(`- ⚠️ Gate pendiente de una sesión anterior: corré \`${config.gate?.command ?? "node scripts/gate.mjs"}\`.`);
 }
 
-const status = path.join(root, cfg.docs.status);
-if (existsSync(status)) {
-  lines.push('', `— ${cfg.docs.status} (estado verificado) —`, readFileSync(status, 'utf8').split('\n').slice(0, 40).join('\n'));
+// STATUS.md: estado verificado + deuda conocida.
+const statusFile = path.join(REPO_ROOT, config.status?.file ?? "STATUS.md");
+if (fs.existsSync(statusFile)) {
+  const status = fs.readFileSync(statusFile, "utf8").split("\n").slice(0, 40).join("\n");
+  lines.push("", "### STATUS.md (encabezado)", status);
+} else {
+  lines.push(`- ⚠️ Falta \`${config.status?.file ?? "STATUS.md"}\`: nadie sabe qué está verificado.`);
 }
 
-context('SessionStart', lines.join('\n'));
+// El recordatorio también sale del config: es lo último que el agente lee al abrir la
+// sesión, así que nombrar el comando de gate de OTRO stack lo vuelve ruido.
+lines.push(
+  "",
+  // Vacío cuenta como ausente: la plantilla trae la clave con "" para que se llene.
+  config.status?.reminder ||
+    `Recordá: nada se entrega sin \`${config.gate?.command ?? "el gate"}\` verde · lecciones con \`/lesson\`.`,
+);
+
+allow(lines.join("\n"));

@@ -20,8 +20,13 @@ transpiles it, exactly like `@doctiling/landing`. Pure client of `/api/chat/*`.
 - **Styling**: Tailwind classes of the `@doctiling/ui` preset (`text-muted-foreground`, `bg-card`…); the host
   compiles them (`content` glob) and imports `@doctiling/chat/styles.css` once (shell, prose, typing dots).
 - **API contract**: doctiling-web `specs/045-tenant-chat-pwa/contracts/chat-api.md`; types in `src/lib/api.ts`.
-- **Gate (BLOCKING)**: `npm run gate`. Never weaken a check to go green.
-- **Agent harness**: `docs/harness/harness.md`; principles in `CONSTITUTION.md`; verified state in `STATUS.md`;
-  incidents in `docs/harness/gotchas.md` via `/lesson`. Install the pre-commit once per clone: `npm run hooks:install`.
+- **Gate (BLOCKING)**: `npm run gate` (`node scripts/gate.mjs`, signals in `.claude/harness.config.json` →
+  `gate.signals`). Never weaken a check to go green.
+- **Agent harness**: [raalzate/agent-harness](https://github.com/raalzate/agent-harness) — this repo's harness in
+  `docs/arnes.md`; principles in `CONSTITUTION.md`; verified state in `STATUS.md`; incidents in `docs/gotchas.md`
+  via `/lesson`. Install the git hooks once per clone: `npm run hooks:install`. Generic hook/script files are
+  byte-identical upstream copies: only `.claude/harness.config.json` is repo-specific.
+- Commits that touch code reference an issue (`#N`) or carry a `no-issue: <why>` line (`.githooks/commit-msg`);
+  branches are `type/what`; `main` only by PR (`.githooks/pre-push`).
 - **Release**: bump `version`, tag `vX.Y.Z` (`release.yml` = gate + tag/version match); web bumps the pin.
 - Public repo: nothing secret, no `.env`.

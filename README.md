@@ -43,7 +43,7 @@ import { ChatApp } from '@doctiling/chat';
    - `GET /{locale}/chat/sw.js` → `serviceWorkerSource({ scope, offlineUrl, version, precache })`
      (serve with `Cache-Control: no-store`)
    - `GET /{locale}/chat/offline.html` → `offlineHtml(locale)`
-   - copy `@doctiling/chat/public/icons/*` to `public/chat/icons/` (`scripts/chat-assets.mjs`, like the landing).
+   - copy `@doctiling/chat/public/icons/*` to `public/chat/icons/` (doctiling-web `scripts/chat-assets.mjs`, like the landing). <!-- linkcheck:ignore — path in doctiling-web -->
    The `(chat)` layout adds `<link rel="manifest">`; `ChatApp` itself registers `${basePath}/sw.js` with
    scope `${basePath}/`.
 
