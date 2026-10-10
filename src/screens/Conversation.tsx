@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ArrowLeft, Files, Trash2 } from 'lucide-react';
+import { ArrowLeft, Files, Share2, Trash2 } from 'lucide-react';
 import { Badge } from '@doctiling/ui/atoms/badge';
 import { Button } from '@doctiling/ui/atoms/button';
 import { SimpleTooltip } from '@doctiling/ui/molecules/tooltip';
@@ -18,6 +18,7 @@ import { useDocuments } from '../lib/documents';
 import { useIsDesktop } from '../lib/media';
 import { reportNetworkFailure, reportNetworkSuccess } from '../lib/online';
 import { navigate } from '../lib/router';
+import { shareLink } from '../lib/share';
 import { Documents } from './Documents';
 import { SourceSheet } from './SourceSheet';
 
@@ -230,6 +231,14 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
   const hrefFor = React.useCallback((id: string) => paths.document(kbId, id), [paths, kbId]);
   const openDoc = React.useCallback((href: string) => navigate(href), []);
   const readOnly = access?.canWrite === false;
+  const share = async () => {
+    const outcome = await shareLink({
+      title: resolvedName ?? t('kb.title'),
+      url: new URL(paths.conversation(kbId), window.location.origin).toString(),
+    });
+    if (outcome === 'copied') push({ message: t('share.copied') });
+    if (outcome === 'failed') push({ message: t('share.failed'), kind: 'error' });
+  };
   // Mobile: the icon opens the Documents screen. Desktop: it toggles the list in the side panel.
   const toggleDocs = () => navigate(docsOpen ? paths.conversation(kbId) : paths.documents(kbId));
 
@@ -252,6 +261,9 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
             </Badge>
           </SimpleTooltip>
         )}
+        <IconButton label={t('share.conversation')} onClick={() => void share()}>
+          <Share2 strokeWidth={1.75} />
+        </IconButton>
         <IconButton label={docsOpen ? t('documents.close') : t('documents.title')} onClick={toggleDocs} aria-pressed={desktop ? docsOpen : undefined}>
           <Files strokeWidth={1.75} />
         </IconButton>

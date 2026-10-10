@@ -28,6 +28,13 @@
       "admin": "Admin",
       "collaborator": "Colaboración",
       "reader": "Solo lectura"
+    },
+    "group": "Agrupar por acceso",
+    "ungroup": "Ver como lista",
+    "groups": {
+      "manage": "Gestionas",
+      "collaborate": "Colaboras",
+      "read": "Solo lectura"
     }
   },
   "conversation": {
@@ -193,5 +200,10 @@
     "remove": "Quitar la referencia a {title}",
     "references": "Documentos referenciados",
     "limit": "Puedes referenciar hasta {max} documentos por pregunta."
+  },
+  "share": {
+    "conversation": "Compartir el enlace a esta base",
+    "copied": "Enlace copiado. Solo quien tenga acceso a esta base podrá abrirlo.",
+    "failed": "No se pudo compartir el enlace."
   }
 }

@@ -2,6 +2,19 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.5.0 — compartir, agrupar por acceso y cabecera de la lista sin truncar
+
+- **Compartir** (cabecera de la conversación, icono `Share2`): abre la hoja de compartir del sistema con el
+  nombre de la base y la URL de su conversación (`navigator.share`); sin ella copia el enlace y avisa
+  ("solo quien tenga acceso podrá abrirlo"). Cerrar la hoja no avisa de nada; si tampoco hay portapapeles,
+  error traducido. El enlace no concede nada: el servidor sigue decidiendo el acceso (`src/lib/share.ts`).
+- **Agrupar por acceso** (cabecera de la lista, icono `Layers`, `aria-pressed`): secciones "Gestionas"
+  (owner/admin), "Colaboras" y "Solo lectura", con recuento y encabezado fijo; los grupos vacíos no se
+  pintan y la insignia de rol se omite dentro de un grupo. Preferencia local `groupBy` (`src/lib/storage.ts`).
+- **Cabecera de la lista**: el título "Bases de conocimiento" ya no se trunca en la columna de 320 px;
+  pasa a dos líneas (`text-balance`) y los botones quedan arriba a la derecha.
+- Tests: `tests/screens/Conversation.share.test.tsx`, agrupación y título en `KnowledgeBases.test.tsx`.
+
 ## 0.4.0 — lista de documentos, menciones `@` y permisos visibles
 
 - **Documentos de la base** (`GET …/knowledge-bases/{kbId}/documents`, solo lo que la persona puede leer):
