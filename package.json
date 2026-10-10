@@ -18,8 +18,10 @@
     "lint": "eslint --max-warnings=0 .",
     "guard:white-label": "node scripts/white-label-guard.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "gate": "sh scripts/gate.sh",
-    "hooks:install": "git config core.hooksPath .githooks"
+    "gate": "node scripts/gate.mjs",
+    "hooks:install": "node scripts/hooks-install.mjs",
+    "gate:fast": "node scripts/gate.mjs fast",
+    "link-ui": "sh scripts/link-ui.sh"
   },
   "license": "SEE LICENSE IN LICENSE",
   "repository": {

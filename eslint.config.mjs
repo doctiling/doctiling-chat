@@ -7,7 +7,12 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['node_modules/**', 'public/**', 'coverage/**', '.ui/**', 'web/**', '*.cjs'],
+    ignores: [
+      'node_modules/**', 'public/**', 'coverage/**', '.ui/**', 'web/**', '*.cjs',
+      // Generic agent-harness files: byte-identical upstream copies (docs/arnes.md), never edited here.
+      '.claude/**', 'scripts/panel/**',
+      'scripts/{gate,repo-lint,harness-selftest,docs-linkcheck,artifacts-check,cycle-check,hooks-install,hooks-timing,harness-map,drift-check}.mjs',
+    ],
   },
   ...tseslint.configs.recommended,
   {

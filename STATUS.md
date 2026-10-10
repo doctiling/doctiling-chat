@@ -1,8 +1,8 @@
 # STATUS — verified state (doctiling-chat)
 
 Printed by the `SessionStart` hook. **Only what a command verified goes here**; what is assumed goes
-under "Known debt". The harness self-test fails if the commit cited below is more than 25 commits
-behind HEAD.
+under "Known debt". `node scripts/drift-check.mjs` (scheduled, `.github/workflows/drift.yml`) fails when the
+date below is older than 14 days.
 
 - **Last full gate:** 2026-10-07, branch `feat/share-group-header` (working tree), sobre `5576a67`
 - **Verdict:** GREEN (`npm run gate`: harness self-test · docs link-check · link @doctiling/ui · white-label

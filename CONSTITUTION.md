@@ -1,7 +1,8 @@
 # Constitution — doctiling-chat
 
-**Version 2.0.0** · Principles of the tenant chat package (spec 045 of doctiling-web, plan amendment
+**Version 2.1.0** · Principles of the tenant chat package (spec 045 of doctiling-web, plan amendment
 2026-10-07: the chat is compiled into the studio).
+2.1.0 — the agent harness is the config-driven [agent-harness](https://github.com/raalzate/agent-harness) (P9 mechanism).
 Every principle states its strength: **BLOCKING** names the command that fails; otherwise it is **REVIEW**
 (judged by the `reviewer` subagent and the human). Amendments bump the version, in their own commit.
 
@@ -58,8 +59,9 @@ the service worker never caches `/api/*`, a non-GET or a request with `Authoriza
 
 ## P9 — Nothing ships without a green gate · BLOCKING
 
-*Mechanism:* `npm run gate` (`scripts/gate.sh`: harness self-test · docs link-check · link @doctiling/ui ·
-white-label guard · lint · typecheck · tests), the `Stop` hook, and `.github/workflows/gate.yml` on every
+*Mechanism:* `npm run gate` (`scripts/gate.mjs`, signals in `.claude/harness.config.json`: harness self-test ·
+docs link-check · convention lint · artifacts in place · link @doctiling/ui · white-label guard · lint ·
+typecheck · tests · code index · hook latency), the `Stop` hook, and `.github/workflows/gate.yml` on every
 push, PR and `v*` tag; `release.yml` runs the gate and checks the tag against `version`.
 
 ## P10 — Consumers pin tags · REVIEW
