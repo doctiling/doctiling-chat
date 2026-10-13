@@ -12,7 +12,7 @@ Same definitions as <https://raalzate.github.io/agent-harness/>, scaled to a sma
 |---|---|---|
 | harness self-test | `node scripts/harness-selftest.mjs` | a hook that no longer bites (one sample derived from every rule), a guard that bites innocent work, the Stop hook dead in a worktree, a gate signal without `# why:`, a gotcha without its mechanism, CI not running the gate, `core.hooksPath` unset, a stale STATUS.md |
 | docs link-check | `node scripts/docs-linkcheck.mjs` | a `docs/...` pointer to a file that is not tracked |
-| link @doctiling/ui | `sh scripts/link-ui.sh` | no design-system checkout next to this repo (`../web/packages/ui` or `DOCTILING_UI_DIR`): typecheck and tests would resolve nothing |
+| link @doctiling/ui | `node scripts/link-ui.mjs` | no design-system checkout next to this repo (`../web/packages/ui` or `DOCTILING_UI_DIR`): typecheck and tests would resolve nothing |
 | white-label guard | `node scripts/white-label-guard.mjs` | a vendor name anywhere under `src/` or `public/` (copy, SW source, offline page, code) |
 | lint | `npm run lint` | a native `title=` in JSX, an `<IconButton>` without `label`, an import of `next` or `@/` (host-agnostic), unused code, type-only imports |
 | typecheck | `npm run typecheck` | type errors, a broken import, a drift from the API types in `src/lib/api.ts`, a `ChatAppProps` contract break |
@@ -21,7 +21,7 @@ Same definitions as <https://raalzate.github.io/agent-harness/>, scaled to a sma
 ## Hooks
 
 Generic files, byte-identical with doctiling-web / -cli / -mobile / -brand / -landing (doctiling-workspace
-`scripts/harness-drift.sh` fails on drift); everything repo-specific is in `.claude/harness.config.json`.
+the workspace drift check (harness-drift) fails on drift); everything repo-specific is in `.claude/harness.config.json`.
 
 | Event | Hook | What it does |
 |---|---|---|
@@ -44,3 +44,7 @@ Generic files, byte-identical with doctiling-web / -cli / -mobile / -brand / -la
 - The pre-commit is cheap on purpose (protected paths only); the full gate is the `Stop` hook and CI.
 - The gate needs a doctiling-web checkout (private) for `@doctiling/ui`; a contributor without access cannot
   run typecheck or tests. Retire with a published `@doctiling/ui`.
+
+## Señales del gate (por nombre, como en `gate.signals` de `.claude/harness.config.json`)
+
+Desde el port a agent-harness `119695d` (2026-10-12) la definición del gate es la lista `gate.signals`: `scripts/gate.sh` es el wrapper genérico de `scripts/gate.mjs`, que corre cada señal como argv, sin shell, con su `why`. Señales: «harness self-test» · «docs link-check» · «convention lint» · «harness cost (hook latency)» · «link @doctiling/ui» · «white-label guard» · «lint» · «typecheck» · «tests».

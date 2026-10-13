@@ -14,7 +14,7 @@ transpiles it, exactly like `@doctiling/landing`. Pure client of `/api/chat/*`.
 - **Copy** lives in `src/i18n/{en,es}.json`, both locales in the same change (`tests/lib/i18n.test.ts`).
   Vendor names never reach `src/` or `public/` (`scripts/white-label-guard.mjs`, BLOCKING).
 - **Design system**: `@doctiling/ui` (Button, SimpleTooltip, Sheet parts) is a requirement of the host,
-  resolved here through the `.ui` symlink (`scripts/link-ui.sh`). Only `IconButton`, `Sheet` (composition),
+  resolved here through the `.ui` symlink (`scripts/link-ui.mjs`). Only `IconButton`, `Sheet` (composition),
   `Toast` and the chat-specific pieces stay local. Icon controls: `<IconButton label=…>` (accessible name +
   tooltip); native `title=` is banned by eslint. Touch targets ≥ 44 px (`min-h-[44px]`).
 - **Styling**: Tailwind classes of the `@doctiling/ui` preset (`text-muted-foreground`, `bg-card`…); the host
