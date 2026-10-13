@@ -57,7 +57,7 @@ navigates to `signInHref?callbackUrl=<current path>`; on a bare **404** from `/a
 raw-TS workspace package inside the private `doctiling-web` repo and is a **requirement of the host, not a
 declared peer**: an unpublished package in `peerDependencies` makes npm reshuffle the consumer's workspace
 link on every install. This repo's own typecheck and tests resolve it through a `.ui` symlink to a web
-checkout (`scripts/link-ui.sh`, `../web/packages/ui` by default; `DOCTILING_UI_DIR` in CI, where a sparse
+checkout (`scripts/link-ui.mjs`, `../web/packages/ui` by default; `DOCTILING_UI_DIR` in CI, where a sparse
 checkout needs the `WEB_READ_TOKEN` secret). The Radix packages the design system needs come with the host.
 
 ## Develop
