@@ -7,9 +7,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    // scripts/panel/** are generic agent-harness files (byte-identical across the doctiling repos,
-    // linted in their upstream); their style is not this package's to fix.
-    ignores: ['node_modules/**', 'public/**', 'coverage/**', '.ui/**', 'web/**', '*.cjs', 'scripts/panel/**'],
+    ignores: ['node_modules/**', 'public/**', 'coverage/**', '.ui/**', 'web/**', '*.cjs'],
   },
   ...tseslint.configs.recommended,
   {
