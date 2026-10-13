@@ -292,7 +292,8 @@
       "node_modules",
       ".git",
       "coverage",
-      ".ui"
+      ".ui",
+      "web"
     ],
     "ignoreFiles": [
       "docs/buenas-practicas.md",
@@ -316,7 +317,8 @@
       "docs/harness/harness.md"
     ],
     "ignoreMarker": "linkcheck:ignore",
-    "$commentExternal": "paths that live in doctiling-web and are cited here as mechanisms of principles shared with the host."
+    "$commentExternal": "paths that live in doctiling-web and are cited here as mechanisms of principles shared with the host.",
+    "$commentWeb": "`web/` is the sparse checkout of doctiling-web that CI makes for @doctiling/ui (DOCTILING_UI_DIR); gitignored, never this repo's prose."
   },
   "status": {
     "file": "STATUS.md",
