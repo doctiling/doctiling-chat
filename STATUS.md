@@ -4,10 +4,20 @@ Printed by the `SessionStart` hook. **Only what a command verified goes here**; 
 under "Known debt". The harness self-test fails if the commit cited below is more than 25 commits
 behind HEAD.
 
-- **Last full gate:** 2026-10-12, branch `chore/harness-119695d` (working tree, port to agent-harness `119695d`)
-- **Verdict:** GREEN (`npm run gate`, 9/9 signals, 60 s: harness self-test · docs link-check · convention lint · harness cost
-  (hook latency, max 153 ms / 900) · link @doctiling/ui · white-label guard (41 files) · lint · typecheck · tests — 116 tests,
-  22 files)
+- **Last full gate:** 2026-10-13, branch `feat/054-chat-create-documents` (working tree, v0.6.0)
+- **Verdict:** GREEN (`npm run gate`, 9/9 signals, 50 s: harness self-test · docs link-check · convention lint · harness cost
+  · link @doctiling/ui · white-label guard · lint · typecheck · tests — 142 tests, 24 files)
+
+**Create and upload documents from the chat — doctiling-web spec 054 (v0.6.0, 2026-10-13)**: "New document" in the
+composer and in Documents opens the studio's five methods (generate with AI, blank, table, graph, convert). Convert takes
+up to 20 files, asks which sheets of a workbook to keep and lists the files that failed with their reason; generate shows
+the stream's progress and the quota/credit reason. Every created document is unindexed until the person answers one
+"Index now?" per operation; blank/table/graph offer the studio or a composer chip for the agent. Unindexed rows of the list
+get "Index" for collaborators and above; collaborators and readers see "New document" disabled with the reason. Verified
+in jsdom (`tests/components/new-document.test.tsx`, `tests/screens/Documents.create-index.test.tsx`, `tests/lib/api.test.ts`:
+multipart upload without a forced JSON Content-Type).
+
+- **Previous full gate:** 2026-10-12, branch `chore/harness-119695d` — GREEN (116 tests, 22 files)
 
 **Port to agent-harness `119695d` (2026-10-12)**: generic files byte-identical to the upstream; the gate is `gate.signals`
 in `.claude/harness.config.json`; `scripts/link-ui.mjs` replaces the shell script; `tracker` + `commitMsg` require an issue

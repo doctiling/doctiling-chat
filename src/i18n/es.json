@@ -205,5 +205,103 @@
     "conversation": "Compartir el enlace a esta base",
     "copied": "Enlace copiado. Solo quien tenga acceso a esta base podrá abrirlo.",
     "failed": "No se pudo compartir el enlace."
+  },
+  "newDocument": {
+    "open": "Nuevo documento",
+    "heading": "Nuevo documento",
+    "description": "Elige un método de creación para tu nuevo documento.",
+    "disabledReason": "Solo los administradores de esta base pueden crear o subir documentos.",
+    "methods": {
+      "generate": {
+        "title": "Generar por IA",
+        "body": "Proporciona un tema y la IA generará un documento completo para ti."
+      },
+      "blank": {
+        "title": "En blanco",
+        "body": "Crea un documento vacío que puedes rellenar tú mismo."
+      },
+      "table": {
+        "title": "Tabla",
+        "body": "Crea un nuevo documento con una tabla de datos dinámica."
+      },
+      "graph": {
+        "title": "Grafo",
+        "body": "Crea un documento de grafo: entidades y las relaciones entre ellas."
+      },
+      "convert": {
+        "title": "Convertir",
+        "body": "Convierte tu documento — PDF, Word, Excel, PowerPoint y más — en un documento editable que la IA puede leer y citar."
+      }
+    },
+    "back": "Otros métodos",
+    "titleLabel": "Título",
+    "titlePlaceholder": "p. ej., Mi nuevo documento",
+    "create": "Crear",
+    "creating": "Creando…",
+    "convert": {
+      "choose": "Elegir archivos",
+      "hint": "PDF, DOCX, presentaciones u hojas de cálculo, hasta {max} archivos a la vez.",
+      "tooMany": "Elige como máximo {max} archivos a la vez.",
+      "progress": "Convirtiendo {name}…",
+      "failedFile": "{name}: {reason}",
+      "noneCreated": "No se creó ningún documento."
+    },
+    "sheets": {
+      "heading": "Elige las hojas a convertir",
+      "description": "{name} tiene {count} hojas. Cada hoja elegida se convierte en un documento tabla.",
+      "rows": "{count} filas",
+      "confirm": "Convertir {count} hojas",
+      "skip": "Omitir este archivo"
+    },
+    "generate": {
+      "topicLabel": "Tema",
+      "topicPlaceholder": "p. ej., La Historia de la Inteligencia Artificial",
+      "deep": "Razonamiento profundo",
+      "submit": "Generar documento",
+      "thinking": "Razonando…",
+      "drafting": "Redactando…",
+      "stop": "Detener"
+    },
+    "created": {
+      "heading": "Documento creado",
+      "body": "\"{title}\" está en la base, todavía sin indexar.",
+      "openStudio": "Abrir en el estudio",
+      "askAgent": "Pedir al agente que lo llene",
+      "askAgentText": "Llena este documento: ",
+      "done": "Listo"
+    },
+    "errors": {
+      "forbidden_create": "Solo los administradores de esta base pueden crear o subir documentos.",
+      "invalid_body": "La solicitud no es válida.",
+      "file_too_large": "El archivo supera el límite de subida.",
+      "unsupported_type": "Este tipo de archivo no se puede convertir. Usa un PDF, un DOCX o una hoja de cálculo.",
+      "empty_extraction": "No se encontró contenido en el archivo.",
+      "extraction_failed": "No se pudo leer el archivo. Puede estar dañado.",
+      "rate_limited": "Demasiadas solicitudes de IA a la vez. Espera a que termine una e inténtalo de nuevo.",
+      "quota_exceeded": "Alcanzaste tu límite de solicitudes de IA. Inténtalo más tarde.",
+      "credit_exceeded": "Se agotó tu crédito de IA. Pide a un administrador que lo amplíe.",
+      "save_failed": "No se pudo guardar el documento.",
+      "network": "Sin conexión. Inténtalo de nuevo cuando vuelvas a estar en línea.",
+      "unknown": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
+  "indexPrompt": {
+    "heading": "¿Indexar ahora?",
+    "bodyOne": "Se creó \"{title}\". Indexarlo lo pone a disposición de las respuestas del agente.",
+    "bodyMany": "Se crearon {count} documentos. Indexarlos los pone a disposición de las respuestas del agente.",
+    "now": "Indexar ahora",
+    "later": "Después",
+    "indexing": "Indexando…",
+    "done": "Indexado.",
+    "partial": "{ok} de {total} documentos indexados.",
+    "failed": "No se pudieron indexar los documentos.",
+    "laterNote": "Quedan en la base sin indexar. Puedes indexarlos desde la lista de documentos."
+  },
+  "documentsIndex": {
+    "index": "Indexar",
+    "indexing": "Indexando…",
+    "indexLabel": "Indexar \"{title}\"",
+    "done": "\"{title}\" indexado.",
+    "failed": "No se pudo indexar \"{title}\"."
   }
 }

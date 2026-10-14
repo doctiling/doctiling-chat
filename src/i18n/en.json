@@ -205,5 +205,103 @@
     "conversation": "Share a link to this base",
     "copied": "Link copied. Only people with access to this base can open it.",
     "failed": "The link could not be shared."
+  },
+  "newDocument": {
+    "open": "New document",
+    "heading": "New document",
+    "description": "Choose a creation method for your new document.",
+    "disabledReason": "Only administrators of this base can create or upload documents.",
+    "methods": {
+      "generate": {
+        "title": "Generate with AI",
+        "body": "Provide a topic and the AI will generate a complete document for you."
+      },
+      "blank": {
+        "title": "Blank",
+        "body": "Create an empty document that you can fill out yourself."
+      },
+      "table": {
+        "title": "Table",
+        "body": "Create a new document with a dynamic data table."
+      },
+      "graph": {
+        "title": "Graph",
+        "body": "Create a graph document: entities and the relations between them."
+      },
+      "convert": {
+        "title": "Convert",
+        "body": "Convert your document — PDF, Word, Excel, PowerPoint and more — into an editable document the AI can read and cite."
+      }
+    },
+    "back": "Other methods",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Your title here...",
+    "create": "Create",
+    "creating": "Creating…",
+    "convert": {
+      "choose": "Choose files",
+      "hint": "PDF, DOCX, presentations or spreadsheets, up to {max} files at a time.",
+      "tooMany": "Choose at most {max} files at a time.",
+      "progress": "Converting {name}…",
+      "failedFile": "{name}: {reason}",
+      "noneCreated": "No document was created."
+    },
+    "sheets": {
+      "heading": "Choose the sheets to convert",
+      "description": "{name} has {count} sheets. Each chosen sheet becomes a table document.",
+      "rows": "{count} rows",
+      "confirm": "Convert {count} sheets",
+      "skip": "Skip this file"
+    },
+    "generate": {
+      "topicLabel": "Topic",
+      "topicPlaceholder": "e.g., The History of Artificial Intelligence",
+      "deep": "Deep reasoning",
+      "submit": "Generate document",
+      "thinking": "Reasoning…",
+      "drafting": "Drafting…",
+      "stop": "Stop"
+    },
+    "created": {
+      "heading": "Document created",
+      "body": "\"{title}\" is in the base, not indexed yet.",
+      "openStudio": "Open in the studio",
+      "askAgent": "Ask the agent to fill it",
+      "askAgentText": "Fill in this document: ",
+      "done": "Done"
+    },
+    "errors": {
+      "forbidden_create": "Only administrators of this base can create or upload documents.",
+      "invalid_body": "The request is not valid.",
+      "file_too_large": "The file is larger than the upload limit.",
+      "unsupported_type": "This file type cannot be converted. Use a PDF, a DOCX or a spreadsheet.",
+      "empty_extraction": "No content could be found in the file.",
+      "extraction_failed": "The file could not be read. It may be damaged.",
+      "rate_limited": "Too many AI requests at once. Wait for one to finish and try again.",
+      "quota_exceeded": "You reached your AI request limit. Try again later.",
+      "credit_exceeded": "Your AI credit is used up. Ask an administrator to raise it.",
+      "save_failed": "The document could not be saved.",
+      "network": "No connection. Try again when you are back online.",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
+  "indexPrompt": {
+    "heading": "Index now?",
+    "bodyOne": "\"{title}\" was created. Indexing makes it available to the agent's answers.",
+    "bodyMany": "{count} documents were created. Indexing makes them available to the agent's answers.",
+    "now": "Index now",
+    "later": "Later",
+    "indexing": "Indexing…",
+    "done": "Indexed.",
+    "partial": "{ok} of {total} documents indexed.",
+    "failed": "The documents could not be indexed.",
+    "laterNote": "They stay in the base, not indexed. You can index them from the documents list."
+  },
+  "documentsIndex": {
+    "index": "Index",
+    "indexing": "Indexing…",
+    "indexLabel": "Index \"{title}\"",
+    "done": "\"{title}\" indexed.",
+    "failed": "\"{title}\" could not be indexed."
   }
 }

@@ -4,10 +4,14 @@ import { Button } from '@doctiling/ui/atoms/button';
 import { Input } from '@doctiling/ui/atoms/input';
 import { DocTypeIcon } from '../components/DocTypeIcon';
 import { IconButton } from '../components/IconButton';
+import { NewDocumentSheet } from '../components/NewDocumentSheet';
+import { useToast } from '../components/Toast';
 import { useLanguage } from '../i18n/use-language';
 import type { DocumentListItem } from '../lib/api';
 import { useChat } from '../lib/chat-context';
 import { filterDocuments, useDocuments } from '../lib/documents';
+import { useKbRole } from '../lib/kb-role';
+import { canCreateDocuments, canIndexDocuments } from '../lib/new-document';
 import { navigate } from '../lib/router';
 
 type Props = {
@@ -29,7 +33,29 @@ export function Documents({ kbId, variant = 'screen', onClose }: Props) {
   const { t } = useLanguage();
   const { api, paths } = useChat();
   const { items, error, reload } = useDocuments(api, kbId);
+  const role = useKbRole(api, kbId);
+  const { push } = useToast();
   const [query, setQuery] = React.useState('');
+  const [indexing, setIndexing] = React.useState<Set<string>>(() => new Set());
+  const indexGuard = React.useRef(new Set<string>());
+
+  // spec 054 FR-009: "Index" on a document left unindexed, for whoever may edit the base.
+  const indexOne = async (doc: DocumentListItem) => {
+    if (indexGuard.current.has(doc.id)) return;
+    indexGuard.current.add(doc.id);
+    setIndexing(new Set(indexGuard.current));
+    try {
+      const [result] = await api.indexDocuments(kbId, [doc.id]);
+      if (result?.ok) push({ message: t('documentsIndex.done', { title: doc.title }) });
+      else push({ message: t('documentsIndex.failed', { title: doc.title }), kind: 'error' });
+    } catch {
+      push({ message: t('documentsIndex.failed', { title: doc.title }), kind: 'error' });
+    } finally {
+      indexGuard.current.delete(doc.id);
+      setIndexing(new Set(indexGuard.current));
+      void reload();
+    }
+  };
   const panel = variant === 'panel';
   const shown = React.useMemo(() => (items ? filterDocuments(items, query) : []), [items, query]);
 
@@ -48,6 +74,7 @@ export function Documents({ kbId, variant = 'screen', onClose }: Props) {
             className="h-11 min-h-[44px] pl-9 text-base md:text-base"
           />
         </div>
+        <NewDocumentSheet kbId={kbId} canCreate={canCreateDocuments(role)} onCreated={() => void reload()} />
       </div>
       {items === null && !error && (
         <p role="status" className="px-4 py-8 text-center text-muted-foreground">
@@ -78,7 +105,12 @@ export function Documents({ kbId, variant = 'screen', onClose }: Props) {
         <ul className="divide-y divide-border" aria-label={t('documents.title')}>
           {shown.map((d) => (
             <li key={d.id}>
-              <DocumentRow doc={d} onOpen={() => navigate(paths.document(kbId, d.id))} />
+              <DocumentRow
+                doc={d}
+                onOpen={() => navigate(paths.document(kbId, d.id))}
+                onIndex={!d.indexed && canIndexDocuments(role) ? () => void indexOne(d) : undefined}
+                indexing={indexing.has(d.id)}
+              />
             </li>
           ))}
         </ul>
@@ -126,14 +158,15 @@ export function Documents({ kbId, variant = 'screen', onClose }: Props) {
   );
 }
 
-function DocumentRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => void }) {
+function DocumentRow({ doc, onOpen, onIndex, indexing = false }: { doc: DocumentListItem; onOpen: () => void; onIndex?: () => void; indexing?: boolean }) {
   const { t } = useLanguage();
   return (
+    <div className="flex items-center gap-2 pr-3">
     <button
       type="button"
       data-doc={doc.id}
       onClick={onOpen}
-      className="flex min-h-[56px] w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="flex min-h-[56px] min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left hover:bg-muted active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
       <DocTypeIcon type={doc.type} className="h-5 w-5 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
@@ -155,5 +188,19 @@ function DocumentRow({ doc, onOpen }: { doc: DocumentListItem; onOpen: () => voi
         )}
       </div>
     </button>
+    {onIndex && (
+      <Button
+        variant="outline"
+        size="sm"
+        data-testid="doc-index"
+        aria-label={t('documentsIndex.indexLabel', { title: doc.title })}
+        disabled={indexing}
+        onClick={onIndex}
+        className="min-h-[44px] shrink-0"
+      >
+        {indexing ? t('documentsIndex.indexing') : t('documentsIndex.index')}
+      </Button>
+    )}
+    </div>
   );
 }

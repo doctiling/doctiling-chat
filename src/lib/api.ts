@@ -164,6 +164,24 @@ export type DocumentListItem = {
 /** Upper bound of `referencedDocumentIds` per question (the server enforces the same). */
 export const MAX_REFERENCES = 10;
 
+/** spec 054: what a chat-created document needs; it is always created unindexed. */
+export type NewDocumentInput = { type: 'text' | 'database' | 'graph'; title: string; content?: string };
+
+export type ConvertedSheet = { name: string; rowCount: number; columnCount: number; table: { columns: unknown[]; rows: unknown[] } };
+
+/** POST …/documents/convert: what the file holds; nothing is saved until createDocument. */
+export type ConvertResult = { kind: 'text'; title: string; markdown: string } | { kind: 'sheets'; title: string; sheets: ConvertedSheet[] };
+
+export type GenerateBody = { topic: string; deepReasoning?: boolean; locale?: 'en' | 'es' };
+
+export type GenerateEvent =
+  | { status: 'Thinking'; thinkingChunk?: string }
+  | { status: 'Drafting'; analysisChunk?: string }
+  | { status: 'Saved'; document: DocumentListItem }
+  | { status: 'Error'; code: string };
+
+export type IndexResult = { id: string; ok: boolean; reason?: 'forbidden' | 'not_found' | 'index_failed' };
+
 export type AgentBody = { query: string; referencedDocumentIds?: string[] } | { resume: { pendingId: string; approved: boolean } };
 
 export type ChatApi = {
@@ -176,6 +194,11 @@ export type ChatApi = {
   documents: (kbId: string) => Promise<{ items: DocumentListItem[] }>;
   /** NDJSON stream; the caller iterates with readNdjson and aborts with the signal. */
   agent: (kbId: string, body: AgentBody, signal: AbortSignal) => Promise<Response>;
+  createDocument: (kbId: string, input: NewDocumentInput) => Promise<DocumentListItem>;
+  convertDocument: (kbId: string, file: File, signal?: AbortSignal) => Promise<ConvertResult>;
+  /** NDJSON stream of GenerateEvent, ending in Saved or Error. */
+  generateDocument: (kbId: string, body: GenerateBody, signal: AbortSignal) => Promise<Response>;
+  indexDocuments: (kbId: string, documentIds: string[]) => Promise<IndexResult[]>;
 };
 
 export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo }: ChatApiConfig): ChatApi {
@@ -192,7 +215,8 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
     const { headers, ...rest } = init;
     const h = new Headers(headers);
     h.set('Accept', h.get('Accept') ?? 'application/json, application/x-ndjson');
-    if (rest.body && !h.has('Content-Type')) h.set('Content-Type', 'application/json');
+    // FormData sets its own multipart boundary; forcing JSON would break the upload.
+    if (rest.body && !(rest.body instanceof FormData) && !h.has('Content-Type')) h.set('Content-Type', 'application/json');
     let res: Response;
     try {
       res = await fetch(`${base}${path}`, { ...rest, headers: h, credentials: 'same-origin' });
@@ -233,5 +257,16 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
     document: (kbId, docId) => apiJson<DocumentView>(`${kb(kbId)}/documents/${encodeURIComponent(docId)}`),
     documents: (kbId) => apiJson<{ items: DocumentListItem[] }>(`${kb(kbId)}/documents`),
     agent: (kbId, body, signal) => apiFetch(`${kb(kbId)}/agent`, { method: 'POST', body: JSON.stringify(body), signal }),
+    createDocument: async (kbId, input) =>
+      (await apiJson<{ document: DocumentListItem }>(`${kb(kbId)}/documents`, { method: 'POST', body: JSON.stringify(input) })).document,
+    convertDocument: (kbId, file, signal) => {
+      const form = new FormData();
+      form.append('file', file);
+      return apiJson<ConvertResult>(`${kb(kbId)}/documents/convert`, { method: 'POST', body: form, signal });
+    },
+    generateDocument: (kbId, body, signal) =>
+      apiFetch(`${kb(kbId)}/documents/generate`, { method: 'POST', body: JSON.stringify(body), signal }),
+    indexDocuments: async (kbId, documentIds) =>
+      (await apiJson<{ results: IndexResult[] }>(`${kb(kbId)}/documents/index`, { method: 'POST', body: JSON.stringify({ documentIds }) })).results,
   };
 }

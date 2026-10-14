@@ -4,6 +4,7 @@ import { Badge } from '@doctiling/ui/atoms/badge';
 import { Button } from '@doctiling/ui/atoms/button';
 import { SimpleTooltip } from '@doctiling/ui/molecules/tooltip';
 import { Composer } from '../components/Composer';
+import { NewDocumentSheet } from '../components/NewDocumentSheet';
 import { ConfirmCard } from '../components/ConfirmCard';
 import { IconButton } from '../components/IconButton';
 import { OfflineBanner } from '../components/OfflineBanner';
@@ -16,6 +17,7 @@ import { ApiError, readNdjson, type Activity, type AgentBody, type AgentEvent, t
 import { useChat } from '../lib/chat-context';
 import { useDocuments } from '../lib/documents';
 import { useIsDesktop } from '../lib/media';
+import { canCreateDocuments } from '../lib/new-document';
 import { reportNetworkFailure, reportNetworkSuccess } from '../lib/online';
 import { navigate } from '../lib/router';
 import { shareLink } from '../lib/share';
@@ -39,7 +41,7 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
   const { api, paths } = useChat();
   const { push } = useToast();
   const desktop = useIsDesktop();
-  const { items: documents } = useDocuments(api, kbId);
+  const { items: documents, reload: reloadDocuments } = useDocuments(api, kbId);
   const [turns, setTurns] = React.useState<Turn[]>([]);
   const [access, setAccess] = React.useState<SessionAccess | null>(null);
   // The server persists `content` only; the tags of a question keep showing after the
@@ -57,7 +59,7 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
   const [loadError, setLoadError] = React.useState(false);
   const [notice, setNotice] = React.useState<string | null>(null);
   const [clearOpen, setClearOpen] = React.useState(false);
-  const [prefill, setPrefill] = React.useState<{ text: string; nonce: number } | null>(null);
+  const [prefill, setPrefill] = React.useState<React.ComponentProps<typeof Composer>['prefill']>(null);
   const [resolvedName, setResolvedName] = React.useState<string | undefined>(kbName);
   React.useEffect(() => {
     if (kbName) return;
@@ -315,6 +317,14 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
         placeholder={readOnly ? t('conversation.placeholderReadOnly') : undefined}
         prefill={prefill}
         documents={documents}
+        leading={
+          <NewDocumentSheet
+            kbId={kbId}
+            canCreate={canCreateDocuments(access?.role)}
+            onCreated={() => void reloadDocuments()}
+            onAskAgent={(doc) => setPrefill({ text: t('newDocument.created.askAgentText'), nonce: Date.now(), references: [doc] })}
+          />
+        }
       />
       <Sheet open={clearOpen} onOpenChange={setClearOpen} heading={t('conversation.clearConfirm.title')} description={t('conversation.clearConfirm.body')}>
         <div className="grid grid-cols-2 gap-2 pt-2">

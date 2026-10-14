@@ -101,3 +101,54 @@ describe('api (T057)', () => {
     expect(JSON.parse(String(calls[1]!.init.body))).toEqual({ query: 'hi', referencedDocumentIds: ['d1', 'd2'] });
   });
 });
+
+// spec 054 T013 — create, convert, generate and index documents from the chat.
+describe('api: documents from the chat (spec 054)', () => {
+  it('createDocument posts JSON and returns the created item', async () => {
+    const doc = { id: 'd1', title: 'Notas', type: 'text', visibility: 'shared', indexed: false };
+    const { calls } = mockFetch([{ match: on('POST', '/api/chat/knowledge-bases/kb%201/documents'), respond: () => json({ document: doc }, 201) }]);
+    const out = await make().createDocument('kb 1', { type: 'text', title: 'Notas' });
+    expect(out).toEqual(doc);
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ type: 'text', title: 'Notas' });
+    expect(headerOf(calls[0]!.init, 'content-type')).toBe('application/json');
+  });
+
+  it('convertDocument sends the file as multipart, without forcing a JSON Content-Type', async () => {
+    const { calls } = mockFetch([
+      { match: on('POST', /\/kb1\/documents\/convert$/), respond: () => json({ kind: 'text', title: 'Plan', markdown: '# Plan' }) },
+    ]);
+    const file = new File(['%PDF'], 'Plan.pdf');
+    const out = await make().convertDocument('kb1', file);
+    expect(out).toEqual({ kind: 'text', title: 'Plan', markdown: '# Plan' });
+    const body = calls[0]!.init.body as FormData;
+    expect(body).toBeInstanceOf(FormData);
+    expect((body.get('file') as File).name).toBe('Plan.pdf');
+    expect(headerOf(calls[0]!.init, 'content-type')).toBeNull();
+  });
+
+  it('convertDocument surfaces the server reason as the ApiError code', async () => {
+    mockFetch([{ match: on('POST', /\/convert$/), respond: () => json({ error: 'unsupported_type' }, 415) }]);
+    await expect(make().convertDocument('kb1', new File(['x'], 'a.exe'))).rejects.toMatchObject({ status: 415, code: 'unsupported_type' });
+  });
+
+  it('generateDocument returns the NDJSON stream for readNdjson', async () => {
+    const { calls } = mockFetch([
+      {
+        match: on('POST', /\/kb1\/documents\/generate$/),
+        respond: () => ndjson([{ status: 'Drafting', analysisChunk: '# A' }, { status: 'Saved', document: { id: 'd9' } }]),
+      },
+    ]);
+    const res = await make().generateDocument('kb1', { topic: 'vacaciones', locale: 'es' }, new AbortController().signal);
+    const events: { status: string }[] = [];
+    for await (const e of readNdjson<{ status: string }>(res)) events.push(e);
+    expect(events.map((e) => e.status)).toEqual(['Drafting', 'Saved']);
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ topic: 'vacaciones', locale: 'es' });
+  });
+
+  it('indexDocuments posts the ids and returns a result per document', async () => {
+    const results = [{ id: 'd1', ok: true }, { id: 'd2', ok: false, reason: 'forbidden' }];
+    const { calls } = mockFetch([{ match: on('POST', /\/kb1\/documents\/index$/), respond: () => json({ results }) }]);
+    expect(await make().indexDocuments('kb1', ['d1', 'd2'])).toEqual(results);
+    expect(JSON.parse(String(calls[0]!.init.body))).toEqual({ documentIds: ['d1', 'd2'] });
+  });
+});
