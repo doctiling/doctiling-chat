@@ -15,10 +15,12 @@ type Props = {
   disabled?: boolean;
   hint?: string;
   placeholder?: string;
-  /** A follow-up chip puts its question in the box; the nonce lets the same text be picked twice. */
-  prefill?: { text: string; nonce: number } | null;
+  /** A follow-up chip puts its question in the box; the nonce lets the same text be picked twice. `references` become chips. */
+  prefill?: { text: string; nonce: number; references?: DocumentListItem[] } | null;
   /** The base's readable documents for the `@` picker; undefined while they load (the picker says so). */
   documents?: DocumentListItem[] | null;
+  /** A control at the start of the box (spec 054: "New document"). */
+  leading?: React.ReactNode;
 };
 
 const PICKER_SIZE = 8;
@@ -32,7 +34,7 @@ const PICKER_SIZE = 8;
 // `@` opens a picker over the base's documents; a choice becomes a chip above
 // the box and the `@…` text leaves the question. Chips travel as
 // `referencedDocumentIds`, never inside the query text.
-export function Composer({ onSend, onStop, running, disabled = false, hint, placeholder, prefill, documents }: Props) {
+export function Composer({ onSend, onStop, running, disabled = false, hint, placeholder, prefill, documents, leading }: Props) {
   const { t } = useLanguage();
   const desktop = useIsDesktop();
   const [value, setValue] = React.useState('');
@@ -45,6 +47,7 @@ export function Composer({ onSend, onStop, running, disabled = false, hint, plac
     if (!prefill) return;
     setValue(prefill.text);
     setMention(null);
+    if (prefill.references?.length) setChips(prefill.references.slice(0, MAX_REFERENCES));
     ref.current?.focus();
   }, [prefill]);
   const sending = React.useRef(false);
@@ -221,6 +224,7 @@ export function Composer({ onSend, onStop, running, disabled = false, hint, plac
         </div>
       )}
       <div className="flex items-end gap-2 rounded-2xl border border-input bg-card px-3 py-1.5">
+        {leading}
         <textarea
           ref={ref}
           value={value}
