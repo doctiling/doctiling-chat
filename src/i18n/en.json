@@ -82,7 +82,8 @@
       "extracting": "Extracting structured data",
       "calculating": "Calculating",
       "measuringText": "Measuring the text",
-      "processingResults": "Processing the results"
+      "processingResults": "Processing the results",
+      "retryNudge": "Retry requested"
     },
     "confirm": {
       "title": "The agent asks for your approval",

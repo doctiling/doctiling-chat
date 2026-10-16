@@ -2,6 +2,11 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.6.3 — el reintento pedido al agente se lee como tal
+
+- Cuando el bucle del agente devuelve un error y exige volver a llamar (web 0.28.4, «Reintento pedido»),
+  la línea de actividad lo muestra con ese texto y la herramienta fallida, en vez del genérico «Trabajando…».
+
 ## 0.6.2 — una cita con el título en lugar del id no enlaza a un 404
 
 - Cuando el modelo escribe `doc:Grafo de conceptos …` (el título donde va el id), la palabra ya no se
