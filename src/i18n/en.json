@@ -39,6 +39,7 @@
   },
   "conversation": {
     "placeholder": "Ask this knowledge base…",
+    "documentLink": "document",
     "send": "Send",
     "stop": "Stop",
     "clear": "Clear conversation",

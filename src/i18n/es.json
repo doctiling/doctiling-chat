@@ -39,6 +39,7 @@
   },
   "conversation": {
     "placeholder": "Pregunta a esta base…",
+    "documentLink": "documento",
     "send": "Enviar",
     "stop": "Detener",
     "clear": "Limpiar conversación",
