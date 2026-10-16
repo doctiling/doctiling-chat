@@ -27,7 +27,10 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
   const { t } = useLanguage();
   const isUser = turn.role === 'user';
   const split = React.useMemo(() => (isUser ? { text: turn.content, followups: [] } : splitFollowups(turn.content)), [isUser, turn.content]);
-  const rendered = React.useMemo(() => (isUser ? split.text : linkifyDocCitations(split.text, hrefFor)), [isUser, split.text, hrefFor]);
+  const rendered = React.useMemo(
+    () => (isUser ? split.text : linkifyDocCitations(split.text, hrefFor, { fallbackLabel: t('conversation.documentLink') })),
+    [isUser, split.text, hrefFor, t],
+  );
   return (
     <article className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`} data-testid="turn" data-role={turn.role}>
       <span className="px-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
@@ -78,7 +81,10 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
 
 export function TurnList({ turns, live, hrefFor, onOpenDoc, children, onPickFollowup }: Props) {
   const { t } = useLanguage();
-  const liveRendered = React.useMemo(() => (live ? linkifyDocCitations(splitFollowups(live.text).text, hrefFor) : ''), [live, hrefFor]);
+  const liveRendered = React.useMemo(
+    () => (live ? linkifyDocCitations(splitFollowups(live.text).text, hrefFor, { fallbackLabel: t('conversation.documentLink') }) : ''),
+    [live, hrefFor, t],
+  );
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
       {turns.map((turn, i) => (

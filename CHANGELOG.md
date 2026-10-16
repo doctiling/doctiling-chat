@@ -2,6 +2,12 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.6.1 — una cita siempre se lee por su título
+
+- Una respuesta que nombra el documento y lo cita entre paréntesis (`"Título" (doc:ID)`) se muestra como un
+  solo enlace con el título; una cita sin título se lee como «documento», nunca como el id
+  (`src/lib/citations.ts`, doctiling-web #137).
+
 ## 0.5.0 — compartir, agrupar por acceso y cabecera de la lista sin truncar
 
 - **Compartir** (cabecera de la conversación, icono `Share2`): abre la hoja de compartir del sistema con el

@@ -4,18 +4,35 @@
 // fenced code is left alone.
 
 const CITATION = /\[\[doc:([A-Za-z0-9_-]+)\]\]|\[doc:([A-Za-z0-9_-]+)\]|doc:([A-Za-z0-9_-]+)(?:\s+"([^"\n]+)")?/g;
+// `"Title" (doc:ID)` — the model names the document and cites it in parentheses:
+// one link with the title, never the id next to it (doctiling-web #137).
+const TITLED_CITATION = /"([^"\n]+)"\s*\(\s*\[{0,2}doc:([A-Za-z0-9_-]+)\]{0,2}(?:\s+"[^"\n]+")?\s*\)/g;
 const FENCE = /```[\s\S]*?```/g;
 
-export function linkifyDocCitations(markdown: string, hrefFor: (id: string) => string): string {
+export type CitationLabels = {
+  /** Title known to the UI for a document id. */
+  titleFor?: (id: string) => string | undefined;
+  /** What a citation without a title reads as; the id never renders as text. */
+  fallbackLabel?: string;
+};
+
+export function linkifyDocCitations(
+  markdown: string,
+  hrefFor: (id: string) => string,
+  labels: CitationLabels = {},
+): string {
   const fences: string[] = [];
   const withoutFences = markdown.replace(FENCE, (fence) => {
     fences.push(fence);
     return `\u0000${fences.length - 1}\u0000`;
   });
-  const linked = withoutFences.replace(CITATION, (_m, a?: string, b?: string, c?: string, title?: string) => {
-    const id = a ?? b ?? c ?? '';
-    return `[${title ?? id}](${hrefFor(id)})`;
-  });
+  const label = (id: string, title?: string) => title ?? labels.titleFor?.(id) ?? labels.fallbackLabel ?? id;
+  const linked = withoutFences
+    .replace(TITLED_CITATION, (_m, title: string, id: string) => `[${title}](${hrefFor(id)})`)
+    .replace(CITATION, (_m, a?: string, b?: string, c?: string, title?: string) => {
+      const id = a ?? b ?? c ?? '';
+      return `[${label(id, title)}](${hrefFor(id)})`;
+    });
   return linked.replace(/\u0000(\d+)\u0000/g, (_m, i: string) => fences[Number(i)] ?? '');
 }
 

@@ -25,7 +25,8 @@ describe('Conversation stream (T062)', () => {
     renderApp(<Conversation kbId="kb-pol" kbName="Políticas" />);
     expect(await screen.findByText('How many vacation days?')).toBeInTheDocument();
     expect(screen.getByText('Searching the knowledge base')).toBeInTheDocument();
-    const link = screen.getByRole('link', { name: 'd1' });
+    // A citation without a title reads as «document», never as the id (doctiling-web #137).
+    const link = screen.getByRole('link', { name: 'document' });
     expect(link).toHaveAttribute('href', '/es/chat/kb/kb-pol/doc/d1');
   });
 
@@ -79,7 +80,7 @@ describe('Conversation stream (T062)', () => {
     await waitFor(() => expect(screen.queryByTestId('turn-live')).not.toBeInTheDocument());
     const agentTurns = screen.getAllByTestId('turn').filter((t) => t.dataset.role === 'agent');
     expect(agentTurns).toHaveLength(1);
-    expect(within(agentTurns[0]!).getByRole('link', { name: 'pol-7' })).toHaveAttribute('href', '/es/chat/kb/kb-pol/doc/pol-7');
+    expect(within(agentTurns[0]!).getByRole('link', { name: 'document' })).toHaveAttribute('href', '/es/chat/kb/kb-pol/doc/pol-7');
     expect(within(agentTurns[0]!).getByText('15').tagName).toBe('STRONG');
     const post = calls.find((c) => c.init.method === 'POST');
     expect(JSON.parse(String(post!.init.body))).toEqual({ query: 'vacation?' });
