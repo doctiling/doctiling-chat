@@ -2,6 +2,12 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.6.2 — una cita con el título en lugar del id no enlaza a un 404
+
+- Cuando el modelo escribe `doc:Grafo de conceptos …` (el título donde va el id), la palabra ya no se
+  toma como id ni se enlaza a «Este documento ya no está en la base»: se muestra el texto sin el prefijo.
+  Un id real lleva dígito o guion (`<base>-<uid>`); `citedDocumentIds` también lo ignora.
+
 ## 0.6.1 — una cita siempre se lee por su título
 
 - Una respuesta que nombra el documento y lo cita entre paréntesis (`"Título" (doc:ID)`) se muestra como un

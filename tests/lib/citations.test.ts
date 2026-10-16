@@ -18,9 +18,18 @@ describe('linkifyDocCitations', () => {
 
   it('a bare citation reads as the known title, else as the neutral label, never as the id', () => {
     const labels = { titleFor: (id: string) => (id === 'a1' ? 'Alfa' : undefined), fallbackLabel: 'documento' };
-    expect(linkifyDocCitations('ver [[doc:a1]] y doc:zz', hrefFor, labels)).toBe(
-      'ver [Alfa](/es/chat/kb/kb1/doc/a1) y [documento](/es/chat/kb/kb1/doc/zz)',
+    expect(linkifyDocCitations('ver [[doc:a1]] y doc:zz-9', hrefFor, labels)).toBe(
+      'ver [Alfa](/es/chat/kb/kb1/doc/a1) y [documento](/es/chat/kb/kb1/doc/zz-9)',
     );
+  });
+
+  // The model wrote the title where the id goes: never a link to /doc/Grafo (a 404).
+  it('a doc: token without digit or dash is not an id: the stray prefix goes, nothing is linked', () => {
+    expect(linkifyDocCitations('[1] doc:Grafo de conceptos "Grafo de conceptos".', hrefFor)).toBe(
+      '[1] Grafo de conceptos "Grafo de conceptos".',
+    );
+    expect(linkifyDocCitations('ver [doc:Factura] y [[doc:Nota]]', hrefFor)).toBe('ver Factura y Nota');
+    expect(citedDocumentIds('doc:Grafo y doc:a1')).toEqual(['a1']);
   });
 
   it('leaves fenced code alone', () => {
