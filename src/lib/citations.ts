@@ -8,6 +8,11 @@ const CITATION = /\[\[doc:([A-Za-z0-9_-]+)\]\]|\[doc:([A-Za-z0-9_-]+)\]|doc:([A-
 // one link with the title, never the id next to it (doctiling-web #137).
 const TITLED_CITATION = /"([^"\n]+)"\s*\(\s*\[{0,2}doc:([A-Za-z0-9_-]+)\]{0,2}(?:\s+"[^"\n]+")?\s*\)/g;
 const FENCE = /```[\s\S]*?```/g;
+// A model that writes the title where the id goes (`doc:Grafo de conceptos …`): a
+// real id carries a digit or a dash (`<kb>-<uid>`); a bare word is not one and
+// must not become a link to a 404.
+const ID_LIKE = /[0-9-]/;
+const STRAY = /doc:(?=[^\s"()[\]]+)/g;
 
 export type CitationLabels = {
   /** Title known to the UI for a document id. */
@@ -29,8 +34,9 @@ export function linkifyDocCitations(
   const label = (id: string, title?: string) => title ?? labels.titleFor?.(id) ?? labels.fallbackLabel ?? id;
   const linked = withoutFences
     .replace(TITLED_CITATION, (_m, title: string, id: string) => `[${title}](${hrefFor(id)})`)
-    .replace(CITATION, (_m, a?: string, b?: string, c?: string, title?: string) => {
+    .replace(CITATION, (m, a?: string, b?: string, c?: string, title?: string) => {
       const id = a ?? b ?? c ?? '';
+      if (!ID_LIKE.test(id)) return m.replace(STRAY, '').replace(/^\[\[(.*)\]\]$|^\[(.*)\]$/, '$1$2');
       return `[${label(id, title)}](${hrefFor(id)})`;
     });
   return linked.replace(/\u0000(\d+)\u0000/g, (_m, i: string) => fences[Number(i)] ?? '');
@@ -38,7 +44,9 @@ export function linkifyDocCitations(
 
 export function citedDocumentIds(markdown: string): string[] {
   const ids = new Set<string>();
-  for (const m of markdown.replace(FENCE, '').matchAll(CITATION)) ids.add(m[1] ?? m[2] ?? m[3] ?? '');
-  ids.delete('');
+  for (const m of markdown.replace(FENCE, '').matchAll(CITATION)) {
+    const id = m[1] ?? m[2] ?? m[3] ?? '';
+    if (ID_LIKE.test(id)) ids.add(id);
+  }
   return [...ids];
 }
