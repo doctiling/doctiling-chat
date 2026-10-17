@@ -2,6 +2,11 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.6.4 — una cita a una entidad de un grafo se lee con su nombre
+
+- El agente puede citar una entidad de un grafo como `doc:ID#Entidad "Título"` (doctiling-web, notebook 84 §6).
+  El chat enlaza el documento y lo rotula «Título › Entidad»; el `#Entidad` nunca queda suelto en el texto.
+
 ## 0.6.3 — el reintento pedido al agente se lee como tal
 
 - Cuando el bucle del agente devuelve un error y exige volver a llamar (web 0.28.4, «Reintento pedido»),
