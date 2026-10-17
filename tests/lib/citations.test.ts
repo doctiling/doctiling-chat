@@ -43,3 +43,19 @@ describe('citedDocumentIds', () => {
     expect(citedDocumentIds('"Alfa" (doc:a1) y [doc:b2]')).toEqual(['a1', 'b2']);
   });
 });
+
+// doctiling-web notebook/84 §6 (approved 2026-10-16): the agent may cite one entity of a
+// graph as doc:ID#Entity "Title". The chat links the document and names the entity;
+// the `#Entity` never shows as loose text.
+describe('entity citations', () => {
+  const href = (id: string) => `/d/${id}`;
+  it('links doc:ID#Entity "Title" to the document, labelled with the title and the entity', () => {
+    expect(linkifyDocCitations('Ver [1] doc:kb-a1#Prototipo "Grafo".', href)).toBe('Ver [1] [Grafo › Prototipo](/d/kb-a1).');
+  });
+  it('takes an entity name with spaces and without a title', () => {
+    expect(linkifyDocCitations('doc:kb-a1#Vibe checks]', href, { fallbackLabel: 'documento' })).toBe('[documento › Vibe checks](/d/kb-a1)]');
+  });
+  it('counts the document of an entity citation once', () => {
+    expect(citedDocumentIds('doc:kb-a1#Prototipo "G" y doc:kb-a1#Producción "G"')).toEqual(['kb-a1']);
+  });
+});
