@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { parseMarkdown, type Block, type Inline } from '../lib/markdown';
+import { useRenderCode, type RenderCode } from '../lib/render-code';
 
 type Props = {
   markdown: string;
@@ -48,7 +49,12 @@ function renderInline(nodes: Inline[], onInternalLink?: (href: string) => void):
   });
 }
 
-function renderBlock(b: Block, key: number, onInternalLink?: (href: string) => void): React.ReactNode {
+function renderBlock(
+  b: Block,
+  key: number,
+  onInternalLink?: (href: string) => void,
+  renderCode?: RenderCode,
+): React.ReactNode {
   switch (b.type) {
     case 'heading': {
       const Tag = `h${b.level}` as 'h1' | 'h2' | 'h3';
@@ -66,12 +72,15 @@ function renderBlock(b: Block, key: number, onInternalLink?: (href: string) => v
         </Tag>
       );
     }
-    case 'code':
+    case 'code': {
+      const custom = b.lang && renderCode ? renderCode(b.lang, b.value) : null;
+      if (custom) return <React.Fragment key={key}>{custom}</React.Fragment>;
       return (
         <pre key={key}>
           <code>{b.value}</code>
         </pre>
       );
+    }
     case 'quote':
       return <blockquote key={key}>{renderInline(b.children, onInternalLink)}</blockquote>;
     case 'table':
@@ -102,5 +111,6 @@ function renderBlock(b: Block, key: number, onInternalLink?: (href: string) => v
 
 export function Markdown({ markdown, onInternalLink, className = '' }: Props) {
   const blocks = React.useMemo(() => parseMarkdown(markdown), [markdown]);
-  return <div className={`prose-chat break-words text-base leading-relaxed ${className}`}>{blocks.map((b, i) => renderBlock(b, i, onInternalLink))}</div>;
+  const renderCode = useRenderCode();
+  return <div className={`prose-chat break-words text-base leading-relaxed ${className}`}>{blocks.map((b, i) => renderBlock(b, i, onInternalLink, renderCode))}</div>;
 }

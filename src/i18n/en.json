@@ -120,7 +120,11 @@
     },
     "readOnlyBadge": "Read-only",
     "placeholderReadOnly": "Ask this knowledge base (read-only)…",
-    "mentionHint": "Type @ to point the question at a document."
+    "mentionHint": "Type @ to point the question at a document.",
+    "listen": "Listen",
+    "listenPause": "Pause reading",
+    "listenResume": "Resume reading",
+    "listenStop": "Stop reading"
   },
   "sourceSheet": {
     "title": "Source",
@@ -132,7 +136,8 @@
       "text": "Document",
       "database": "Table",
       "graph": "Graph"
-    }
+    },
+    "listen": "Listen to the document"
   },
   "settings": {
     "title": "Settings",
@@ -153,7 +158,13 @@
     "signOutHint": "Close your studio session on this device",
     "install": "Install the app",
     "loadFailed": "Your account could not be loaded.",
-    "openStudio": "Open the studio"
+    "openStudio": "Open the studio",
+    "voice": {
+      "title": "Voice",
+      "body": "Replies can be read aloud with your device's own voice.",
+      "toggle": "Read new replies aloud",
+      "unsupported": "This browser cannot read aloud."
+    }
   },
   "offline": {
     "banner": "You are offline. Nothing is served from a local copy.",

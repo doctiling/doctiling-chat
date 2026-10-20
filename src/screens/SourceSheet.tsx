@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { X } from 'lucide-react';
 import { IconButton } from '../components/IconButton';
+import { ListenControls } from '../components/ListenControls';
 import { Markdown } from '../components/Markdown';
 import { Sheet } from '../components/Sheet';
 import { useLanguage } from '../i18n/use-language';
 import { ApiError, type DocumentView } from '../lib/api';
 import { useChat } from '../lib/chat-context';
 import { useIsDesktop } from '../lib/media';
+import { speakableText } from '../lib/speakable';
 
 type Props = { kbId: string; docId: string | null; onClose: () => void };
 
@@ -60,7 +62,12 @@ export function SourceSheet({ kbId, docId, onClose }: Props) {
           {t(`sourceSheet.${error}`)}
         </p>
       )}
-      {doc && <Markdown markdown={doc.markdown} />}
+      {doc && (
+        <>
+          <ListenControls id={`doc:${doc.id}`} text={speakableText(doc.markdown)} listenLabel={t('sourceSheet.listen')} />
+          <Markdown markdown={doc.markdown} />
+        </>
+      )}
     </>
   );
 
