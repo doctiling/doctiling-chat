@@ -2,6 +2,18 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.7.0 — diagramas, voz y entrada móvil (spec 057 de doctiling-web)
+
+- **Los diagramas se dibujan.** `ChatApp` acepta `renderCode(lang, source)`: el estudio dibuja con su propio
+  renderizador los bloques con lenguaje (Mermaid y sus palabras clave). Sin la prop, o si devuelve `null`,
+  el bloque sigue siendo código.
+- **Escuchar.** Cada respuesta del agente y cada documento citado se pueden leer en voz alta con la voz del
+  dispositivo (pausa, reanudar, detener); el código, los diagramas y las tablas no se leen. «Voz» en Ajustes
+  lee en voz alta las respuestas nuevas (nunca el historial). Sin voz en el navegador no aparecen controles.
+- **Entrada móvil.** El chat guarda en el navegador si la persona entró por el chat o eligió el estudio
+  (`entry` en las preferencias, mismo origen que el estudio); «Abrir el estudio» en Ajustes lo fija en estudio.
+  Un tenant sin chat queda en estudio.
+
 ## 0.6.4 — una cita a una entidad de un grafo se lee con su nombre
 
 - El agente puede citar una entidad de un grafo como `doc:ID#Entidad "Título"` (doctiling-web, notebook 84 §6).

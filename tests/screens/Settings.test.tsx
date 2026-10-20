@@ -1,5 +1,6 @@
-import { act, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, fireEvent, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
+import { SpeechProvider } from '../../src/lib/speech';
 import { Settings, localeHref } from '../../src/screens/Settings';
 import { HOST, json, mockFetch, on, renderApp } from '../helpers/render';
 
@@ -15,6 +16,17 @@ describe('Settings (T068)', () => {
     expect(screen.getByText(/Tenant Co \(studio.tenant.test\) · Guest/)).toBeInTheDocument();
     expect(screen.getByTestId('version')).toHaveTextContent(HOST.version);
     expect(screen.getByRole('link', { name: /open the studio/i })).toHaveAttribute('href', HOST.studioHref);
+  });
+
+  it('going to the studio is remembered as the choice, so the phone stops sending the person back to the chat', async () => {
+    window.localStorage.clear();
+    mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json(me) }]);
+    renderApp(<Settings />);
+    await screen.findByText('Ana · ana@tenant.test');
+    const link = screen.getByRole('link', { name: /open the studio/i });
+    link.addEventListener('click', (e) => e.preventDefault()); // jsdom cannot navigate
+    fireEvent.click(link);
+    expect(JSON.parse(window.localStorage.getItem('doctiling-chat:prefs') ?? '{}').entry).toBe('studio');
   });
 
   it('the language toggle links to the same route under the other locale, the current one is not a link', async () => {
@@ -53,5 +65,35 @@ describe('Settings (T068)', () => {
     mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json({ error: 'unknown' }, 500) }]);
     renderApp(<Settings />);
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not be loaded/i);
+  });
+});
+
+// spec 057 US5: voice mode is a device preference, offered only where the browser can speak.
+describe('Settings — voice mode', () => {
+  afterEach(() => {
+    Reflect.deleteProperty(window, 'speechSynthesis');
+    window.localStorage.clear();
+  });
+
+  it('lets the person turn on reading new replies aloud and remembers it', async () => {
+    Object.defineProperty(window, 'speechSynthesis', { value: { speak() {}, cancel() {}, pause() {}, resume() {}, getVoices: () => [] }, configurable: true });
+    mockFetch([]);
+    renderApp(
+      <SpeechProvider language="en">
+        <Settings />
+      </SpeechProvider>,
+    );
+    const toggle = screen.getByRole('switch', { name: 'Read new replies aloud' });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
+    expect(JSON.parse(window.localStorage.getItem('doctiling-chat:prefs') ?? '{}').voiceReplies).toBe(true);
+  });
+
+  it('says so, with no switch, when the browser cannot read aloud', () => {
+    Reflect.deleteProperty(window, 'speechSynthesis');
+    mockFetch([]);
+    renderApp(<Settings />);
+    expect(screen.getByText('This browser cannot read aloud.')).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 });

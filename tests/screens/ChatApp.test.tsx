@@ -37,6 +37,24 @@ describe('ChatApp (T075)', () => {
     expect(await screen.findByRole('textbox')).toBeInTheDocument();
   });
 
+  // spec 057 US4: on a phone the studio sends people to the chat unless they chose the studio;
+  // being in the chat is that choice, so the chat records it for the studio to read.
+  it('records that the person is in the chat (the studio reads it on a phone)', async () => {
+    window.localStorage.clear();
+    mockFetch([{ match: on('GET', '/api/chat/knowledge-bases'), respond: () => json({ items }) }]);
+    renderChatApp();
+    await screen.findByRole('heading', { name: 'Bases de conocimiento' });
+    expect(JSON.parse(window.localStorage.getItem('doctiling-chat:prefs') ?? '{}').entry).toBe('chat');
+  });
+
+  it('does not record the chat as the entry when the chat is not enabled for the tenant', async () => {
+    window.localStorage.clear();
+    mockFetch([{ match: on('GET', '/api/chat/knowledge-bases'), respond: () => notEnabled() }]);
+    renderChatApp();
+    await screen.findByRole('link', { name: /estudio/i });
+    expect(JSON.parse(window.localStorage.getItem('doctiling-chat:prefs') ?? '{}').entry).not.toBe('chat');
+  });
+
   it('a 401 from the API sends the person to signInHref with the current path as callbackUrl (TS-389)', async () => {
     const loc = stubLocation('/es/chat/kb', '?tab=1');
     restore = loc.restore;

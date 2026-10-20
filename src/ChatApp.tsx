@@ -9,6 +9,9 @@ import { LanguageProvider, useLanguage } from './i18n/use-language';
 import { createChatApi } from './lib/api';
 import { ChatProvider, type ChatContextValue } from './lib/chat-context';
 import { useIsDesktop } from './lib/media';
+import { RenderCodeProvider, type RenderCode } from './lib/render-code';
+import { SpeechProvider } from './lib/speech';
+import { setPrefs } from './lib/storage';
 import { makePaths, navigate, useRoute, type Route } from './lib/router';
 import { Conversation } from './screens/Conversation';
 import { Documents } from './screens/Documents';
@@ -37,6 +40,8 @@ export type ChatAppProps = {
   signOutHref: string;
   /** Shown in Settings. */
   version?: string;
+  /** Draws a fenced block that declares a language (e.g. a diagram); null keeps it as code. */
+  renderCode?: RenderCode;
 };
 
 // FR-022: the shell follows the visual viewport so the composer stays above
@@ -107,13 +112,18 @@ function Router({ basePath }: { basePath: string }) {
   }
 }
 
-export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref, signOutHref, version = 'dev' }: ChatAppProps) {
+export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref, signOutHref, version = 'dev', renderCode }: ChatAppProps) {
   const base = basePath.replace(/\/+$/, '') || '/';
   const [disabled, setDisabled] = React.useState(false);
   const api = React.useMemo(
     () => createChatApi({ apiBase, signInHref, onDisabled: () => setDisabled(true) }),
     [apiBase, signInHref],
   );
+  // Being in the chat is the choice that makes a phone open the chat next time (spec 057); a tenant
+  // whose chat is off has no chat to open, so its entry is the studio.
+  React.useEffect(() => {
+    setPrefs({ entry: disabled ? 'studio' : 'chat' });
+  }, [disabled]);
   const value = React.useMemo<ChatContextValue>(
     () => ({ basePath: base, locale, signInHref, studioHref, signOutHref, version, api, paths: makePaths(base) }),
     [base, locale, signInHref, studioHref, signOutHref, version, api],
@@ -121,16 +131,20 @@ export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref
   return (
     <ChatProvider value={value}>
       <LanguageProvider language={locale}>
-        <ToastProvider>
-          {disabled ? (
-            <NotEnabled />
-          ) : (
-            <>
-              <Router basePath={base} />
-              <UpdateToast />
-            </>
-          )}
-        </ToastProvider>
+        <RenderCodeProvider value={renderCode}>
+          <SpeechProvider language={locale}>
+            <ToastProvider>
+              {disabled ? (
+                <NotEnabled />
+              ) : (
+                <>
+                  <Router basePath={base} />
+                  <UpdateToast />
+                </>
+              )}
+            </ToastProvider>
+          </SpeechProvider>
+        </RenderCodeProvider>
       </LanguageProvider>
     </ChatProvider>
   );

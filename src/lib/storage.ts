@@ -11,6 +11,10 @@ export type Prefs = {
   iosHintDismissed?: boolean;
   /** How the base list is shown: flat (default) or grouped by the person's access. */
   groupBy?: 'none' | 'access';
+  /** Voice mode: read each new agent reply aloud as it arrives. */
+  voiceReplies?: boolean;
+  /** Where a phone should land: the chat (default) or the studio. The studio reads it on the same origin. */
+  entry?: 'chat' | 'studio';
 };
 
 function localGet<T>(key: string): T | null {

@@ -3,3 +3,4 @@
 // page (pure, for the host's route handlers). `./public/*`: icons.
 export { ChatApp, type ChatAppProps } from './ChatApp';
 export type { Language } from './i18n';
+export type { RenderCode } from './lib/render-code';

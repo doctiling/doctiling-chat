@@ -9,6 +9,8 @@ import { useLanguage } from '../i18n/use-language';
 import { ApiError, type MeView } from '../lib/api';
 import { useChat } from '../lib/chat-context';
 import { navigate } from '../lib/router';
+import { useSpeech } from '../lib/speech';
+import { getPrefs, setPrefs } from '../lib/storage';
 
 /** The same route under the other locale's basePath, or null when basePath carries no locale segment. */
 export function localeHref(basePath: string, pathname: string, target: Language): string | null {
@@ -17,6 +19,29 @@ export function localeHref(basePath: string, pathname: string, target: Language)
   const otherBase = `${basePath.slice(0, m.index)}/${target}${basePath.slice(m.index + m[0].length)}`;
   const rel = pathname.startsWith(basePath) ? pathname.slice(basePath.length) : '';
   return `${otherBase}${rel}`;
+}
+
+function VoiceSection() {
+  const { t } = useLanguage();
+  const { supported } = useSpeech();
+  const [on, setOn] = React.useState(() => !!getPrefs().voiceReplies);
+  const toggle = () => {
+    const next = !on;
+    setOn(next);
+    setPrefs({ voiceReplies: next });
+  };
+  return (
+    <section className="mt-4 rounded-xl border border-border bg-card p-4 text-card-foreground" data-testid="voice-section">
+      <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">{t('settings.voice.title')}</h2>
+      <p className="mt-2 text-sm text-muted-foreground">{supported ? t('settings.voice.body') : t('settings.voice.unsupported')}</p>
+      {supported && (
+        <label className="mt-3 flex min-h-[44px] items-center justify-between gap-3 text-sm font-medium">
+          {t('settings.voice.toggle')}
+          <input type="checkbox" role="switch" checked={on} onChange={toggle} className="h-5 w-5" />
+        </label>
+      )}
+    </section>
+  );
 }
 
 export function Settings() {
@@ -70,7 +95,7 @@ export function Settings() {
               {t('app.loading')}
             </p>
           )}
-          <a href={studioHref} className="mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline">
+          <a href={studioHref} onClick={() => setPrefs({ entry: 'studio' })} className="mt-3 inline-flex min-h-[44px] items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline">
             {t('settings.openStudio')}
             <ExternalLink className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
           </a>
@@ -97,6 +122,8 @@ export function Settings() {
             })}
           </nav>
         </section>
+
+        <VoiceSection />
 
         <section className="mt-4 flex items-center justify-between rounded-xl border border-border bg-card p-4 text-sm text-card-foreground">
           <span className="text-muted-foreground">{t('settings.version')}</span>

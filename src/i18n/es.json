@@ -120,7 +120,11 @@
     },
     "readOnlyBadge": "Solo lectura",
     "placeholderReadOnly": "Pregunta a esta base (solo lectura)…",
-    "mentionHint": "Escribe @ para dirigir la pregunta a un documento."
+    "mentionHint": "Escribe @ para dirigir la pregunta a un documento.",
+    "listen": "Escuchar",
+    "listenPause": "Pausar lectura",
+    "listenResume": "Reanudar lectura",
+    "listenStop": "Detener lectura"
   },
   "sourceSheet": {
     "title": "Fuente",
@@ -132,7 +136,8 @@
       "text": "Documento",
       "database": "Tabla",
       "graph": "Grafo"
-    }
+    },
+    "listen": "Escuchar el documento"
   },
   "settings": {
     "title": "Ajustes",
@@ -153,7 +158,13 @@
     "signOutHint": "Cierra tu sesión del estudio en este dispositivo",
     "install": "Instalar la app",
     "loadFailed": "No se pudo cargar tu cuenta.",
-    "openStudio": "Abrir el estudio"
+    "openStudio": "Abrir el estudio",
+    "voice": {
+      "title": "Voz",
+      "body": "Las respuestas pueden leerse en voz alta con la voz de tu dispositivo.",
+      "toggle": "Leer en voz alta las respuestas nuevas",
+      "unsupported": "Este navegador no puede leer en voz alta."
+    }
   },
   "offline": {
     "banner": "Sin conexión. No se muestra nada desde una copia local.",
