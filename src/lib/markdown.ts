@@ -53,7 +53,8 @@ const splitRow = (line: string) =>
 const isSeparator = (line: string) => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(line);
 
 export function parseMarkdown(src: string): Block[] {
-  const lines = src.replace(/\r\n?/g, '\n').split('\n');
+  // A fence glued to the end of a sentence (text of two steps joined without a break) opens its own line.
+  const lines = src.replace(/\r\n?/g, '\n').replace(/([^\n`])(```)/g, '$1\n$2').split('\n');
   const blocks: Block[] = [];
   let i = 0;
   let para: string[] = [];
