@@ -57,3 +57,25 @@ describe('markdown (T063)', () => {
     expect(code?.type === 'code' && code.lang).toBe('js');
   });
 });
+
+
+// spec 057: conversations saved before the server separated the text of consecutive steps carry a fence
+// glued to the end of a sentence; it must still open its own block (and not swallow what follows).
+describe('parseMarkdown — a fence in the middle of a line', () => {
+  it('starts the code block on its own line', () => {
+    const blocks = parseMarkdown('See [X] source.```mermaid mindmap\nroot((A))\n  B\n```\n\nAfter the diagram.');
+    expect(blocks.map((b) => b.type)).toEqual(['paragraph', 'code', 'paragraph']);
+    expect(blocks[1]).toMatchObject({ type: 'code', lang: 'mermaid mindmap', value: 'root((A))\n  B' });
+  });
+
+  it('keeps an ordinary fenced block exactly as it was', () => {
+    const blocks = parseMarkdown('Intro\n\n```ts\nconst x = 1;\n```\n');
+    expect(blocks.map((b) => b.type)).toEqual(['paragraph', 'code']);
+    expect(blocks[1]).toMatchObject({ lang: 'ts', value: 'const x = 1;' });
+  });
+
+  it('splits a closing fence glued to the last code line', () => {
+    const blocks = parseMarkdown('```js\nlet a = 1;```\nNext.');
+    expect(blocks.map((b) => b.type)).toEqual(['code', 'paragraph']);
+  });
+});

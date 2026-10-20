@@ -2,6 +2,12 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.7.1 — un bloque de código pegado a una frase abre su propio bloque
+
+- Una respuesta guardada con un ```` ```mermaid ```` pegado al final de una frase («…fuente.```mermaid») se leía
+  como texto corrido y su cierre se tomaba por una apertura, que se tragaba el resto del mensaje. Ahora la cerca
+  siempre abre en su propia línea, también en conversaciones ya guardadas (el servidor deja de pegarlas: web 0.33.1).
+
 ## 0.7.0 — diagramas, voz y entrada móvil (spec 057 de doctiling-web)
 
 - **Los diagramas se dibujan.** `ChatApp` acepta `renderCode(lang, source)`: el estudio dibuja con su propio
