@@ -3,6 +3,7 @@ import { ActivityLine } from './ActivityLine';
 import { ListenControls } from './ListenControls';
 import { Markdown } from './Markdown';
 import { useLanguage } from '../i18n/use-language';
+import { groupDocumentReads } from '../lib/activity';
 import type { Activity, Turn } from '../lib/api';
 import { linkifyDocCitations } from '../lib/citations';
 import { splitFollowups } from '../lib/followups';
@@ -43,7 +44,7 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
       </span>
       {!isUser && turn.activity && turn.activity.length > 0 && (
         <div className="flex flex-col gap-0.5 px-1">
-          {turn.activity.map((a, i) => (
+          {groupDocumentReads(turn.activity).map(({ activity: a }, i) => (
             <ActivityLine key={i} activity={a} />
           ))}
         </div>
@@ -116,8 +117,8 @@ export function TurnList({ turns, live, hrefFor, onOpenDoc, children, onPickFoll
         <article className="flex flex-col items-start gap-1" data-testid="turn-live" data-role="agent">
           <span className="px-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{t('conversation.agent')}</span>
           <div className="flex flex-col gap-0.5 px-1">
-            {live.activity.map((a, i) => (
-              <ActivityLine key={i} activity={a} live={i === live.activity.length - 1 && !live.text} />
+            {groupDocumentReads(live.activity).map(({ activity: a, last }, i) => (
+              <ActivityLine key={i} activity={a} live={last === live.activity.length - 1 && !live.text} />
             ))}
             {live.thinking && live.activity.length === 0 && !live.text && (
               <ActivityLine activity={{ toolName: '', labelKey: 'conversation.thinking' }} live />
