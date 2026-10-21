@@ -513,7 +513,69 @@
       "gate-runner": {
         "mustMatch": "VEREDICTO:\\W*(VERDE|ROJO)",
         "reason": "«nothing ships without a green gate» (P9) is decided on that line, not on a summary."
+      },
+      "ci-investigator": {
+        "mustMatch": "VEREDICTO:\\W*(ROJO|VERDE|OMITIDO|EN CURSO)",
+        "reason": "el agente principal decide si CI bloquea el merge con esa línea; sin ella, «CI anda raro» es una opinión, y OMITIDO tiene que decirse: no es verde."
       }
+    }
+  },
+  "ci": {
+    "investigate": {
+      "$comment": "Read the remote pipeline failure (docs/cicd.md): `scripts/ci-investigate.mjs`, run by the `ci-investigator` subagent and `/ci`. Same values as agent-harness upstream; `--workflow gate.yml` keeps other workflows from hiding the gate. No CLI or credentials = OMITTED, and omitted is not green.",
+      "listCommand": [
+        "gh",
+        "run",
+        "list",
+        "--workflow",
+        "gate.yml",
+        "--branch",
+        "{branch}",
+        "--limit",
+        "1",
+        "--json",
+        "databaseId,status,conclusion,name,url"
+      ],
+      "idField": "databaseId",
+      "conclusionField": "conclusion",
+      "nameField": "name",
+      "urlField": "url",
+      "failedValues": [
+        "failure",
+        "timed_out",
+        "startup_failure"
+      ],
+      "passedValues": [
+        "success"
+      ],
+      "logCommand": [
+        "gh",
+        "run",
+        "view",
+        "{run}",
+        "--log-failed"
+      ],
+      "logFields": [
+        "job",
+        "paso"
+      ],
+      "stripPattern": "^\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z\\s?",
+      "failurePatterns": [
+        "\\berror\\b",
+        "\\bfail(ed|ure|ing)?\\b",
+        "\\bexception\\b",
+        "\\bfatal\\b",
+        "✗",
+        "exit code [1-9]",
+        "GATE ROJO"
+      ],
+      "$ignorePatterns": "Un caso VERDE del self-test cuyo nombre dice «gate rojo» o «error» casa `failurePatterns` sin ser el fallo: la primera corrida real llenaba el reporte de líneas `✓`.",
+      "ignorePatterns": [
+        "^\\s*✓"
+      ],
+      "contextLines": 2,
+      "maxLines": 40,
+      "timeoutMs": 60000
     }
   },
   "observability": {
@@ -651,6 +713,11 @@
         "direction": "sensor",
         "kind": "computacional",
         "stage": "fin del turno"
+      },
+      "ci-investigator": {
+        "direction": "sensor",
+        "kind": "inferencial",
+        "stage": "integración"
       }
     },
     "guides": {
@@ -697,7 +764,8 @@
       "scripts/cycle-check.mjs": "workflow.branchPattern",
       "scripts/hooks-timing.mjs": "observability.budgetMs",
       "scripts/harness-map.mjs": "taxonomy",
-      "scripts/drift-check.mjs": "drift"
+      "scripts/drift-check.mjs": "drift",
+      "scripts/ci-investigate.mjs": "ci.investigate.listCommand"
     }
   }
 }
