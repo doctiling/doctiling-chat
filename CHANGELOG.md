@@ -2,6 +2,12 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.8.0 — leer por partes se ve como una sola lectura (spec 058 de doctiling-web)
+
+- El agente ahora lee un documento grande por su índice y por partes. La actividad de un turno muestra **una línea
+  por documento leído**, en el lugar de su primera lectura, aunque haya leído varias partes; los demás pasos siguen
+  uno por línea. En vivo, los puntos de «escribiendo» siguen a la línea de la lectura en curso.
+
 ## 0.7.1 — un bloque de código pegado a una frase abre su propio bloque
 
 - Una respuesta guardada con un ```` ```mermaid ```` pegado al final de una frase («…fuente.```mermaid») se leía
