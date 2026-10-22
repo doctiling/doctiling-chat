@@ -18,6 +18,8 @@ function renderInline(nodes: Inline[], onInternalLink?: (href: string) => void):
         return <strong key={idx}>{renderInline(n.children, onInternalLink)}</strong>;
       case 'em':
         return <em key={idx}>{renderInline(n.children, onInternalLink)}</em>;
+      case 'mark':
+        return <mark key={idx}>{renderInline(n.children, onInternalLink)}</mark>;
       case 'code':
         return <code key={idx}>{n.value}</code>;
       case 'link': {

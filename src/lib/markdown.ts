@@ -1,12 +1,13 @@
 // A deliberately small markdown → block model for agent replies and source
 // documents: headings, paragraphs, lists, fenced code, blockquotes, tables and
-// inline bold / italic / code / links. No HTML passthrough (everything is text),
+// inline bold / italic / code / links / ==highlights==. No HTML passthrough (everything is text),
 // so nothing the agent writes can inject markup.
 
 export type Inline =
   | { type: 'text'; value: string }
   | { type: 'strong'; children: Inline[] }
   | { type: 'em'; children: Inline[] }
+  | { type: 'mark'; children: Inline[] }
   | { type: 'code'; value: string }
   | { type: 'link'; href: string; children: Inline[] };
 
@@ -18,13 +19,17 @@ export type Block =
   | { type: 'quote'; children: Inline[] }
   | { type: 'table'; header: Inline[][]; rows: Inline[][][] };
 
-const INLINE_TOKEN = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\)|_[^_]+_|\*[^*]+\*)/;
+// `==x==` first, so a highlight that wraps bold or a link stays one mark; the non-space
+// lookarounds keep `a == b` (equality) as text, like the studio's renderer (web spec 059).
+const INLINE_TOKEN = /(==(?=\S)(?:(?!==).)+?(?<=\S)==|\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\)|_[^_]+_|\*[^*]+\*)/;
 
 export function parseInline(text: string): Inline[] {
   const out: Inline[] = [];
   for (const part of text.split(INLINE_TOKEN)) {
     if (!part) continue;
-    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+    if (part.startsWith('==') && part.endsWith('==') && part.length > 4) {
+      out.push({ type: 'mark', children: parseInline(part.slice(2, -2)) });
+    } else if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       out.push({ type: 'strong', children: parseInline(part.slice(2, -2)) });
     } else if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
       out.push({ type: 'code', value: part.slice(1, -1) });
