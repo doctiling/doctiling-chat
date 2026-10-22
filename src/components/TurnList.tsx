@@ -33,7 +33,13 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
   const isUser = turn.role === 'user';
   const split = React.useMemo(() => (isUser ? { text: turn.content, followups: [] } : splitFollowups(turn.content)), [isUser, turn.content]);
   const rendered = React.useMemo(
-    () => (isUser ? split.text : linkifyDocCitations(split.text, hrefFor, { fallbackLabel: t('conversation.documentLink') })),
+    () =>
+      isUser
+        ? split.text
+        : linkifyDocCitations(split.text, hrefFor, {
+            fallbackLabel: t('conversation.documentLink'),
+            blockLabel: (n) => t('conversation.blockLink', { n }),
+          }),
     [isUser, split.text, hrefFor, t],
   );
   const speakable = React.useMemo(() => (isUser ? '' : speakableText(split.text)), [isUser, split.text]);
@@ -105,7 +111,13 @@ export function TurnList({ turns, live, hrefFor, onOpenDoc, children, onPickFoll
   const { t } = useLanguage();
   useReadNewReplies(turns);
   const liveRendered = React.useMemo(
-    () => (live ? linkifyDocCitations(splitFollowups(live.text).text, hrefFor, { fallbackLabel: t('conversation.documentLink') }) : ''),
+    () =>
+      live
+        ? linkifyDocCitations(splitFollowups(live.text).text, hrefFor, {
+            fallbackLabel: t('conversation.documentLink'),
+            blockLabel: (n) => t('conversation.blockLink', { n }),
+          })
+        : '',
     [live, hrefFor, t],
   );
   return (

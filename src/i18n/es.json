@@ -124,7 +124,8 @@
     "listen": "Escuchar",
     "listenPause": "Pausar lectura",
     "listenResume": "Reanudar lectura",
-    "listenStop": "Detener lectura"
+    "listenStop": "Detener lectura",
+    "blockLink": "bloque {n}"
   },
   "sourceSheet": {
     "title": "Fuente",

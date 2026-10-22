@@ -21,7 +21,11 @@ export type CitationLabels = {
   titleFor?: (id: string) => string | undefined;
   /** What a citation without a title reads as; the id never renders as text. */
   fallbackLabel?: string;
+  /** How `doc:ID#block-N` names the block (web spec 059, nb/86): "bloque 3". */
+  blockLabel?: (n: number) => string;
 };
+
+const BLOCK_ENTITY = /^block-(\d+)$/;
 
 export function linkifyDocCitations(
   markdown: string,
@@ -39,7 +43,10 @@ export function linkifyDocCitations(
     .replace(CITATION, (m, a?: string, b?: string, c?: string, entity?: string, title?: string) => {
       const id = a ?? b ?? c ?? '';
       if (!ID_LIKE.test(id)) return m.replace(STRAY, '').replace(/^\[\[(.*)\]\]$|^\[(.*)\]$/, '$1$2');
-      const text = entity?.trim() ? `${label(id, title)} › ${entity.trim()}` : label(id, title);
+      const part = entity?.trim();
+      const block = part ? BLOCK_ENTITY.exec(part) : null;
+      const shown = block ? (labels.blockLabel?.(Number(block[1])) ?? `#${block[1]}`) : part;
+      const text = shown ? `${label(id, title)} › ${shown}` : label(id, title);
       return `[${text}](${hrefFor(id)})`;
     });
   return linked.replace(/\u0000(\d+)\u0000/g, (_m, i: string) => fences[Number(i)] ?? '');

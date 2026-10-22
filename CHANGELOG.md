@@ -2,6 +2,14 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.8.1 — resaltados y citas a bloque (spec 059 de doctiling-web)
+
+- Un texto resaltado en el editor (`==así==`) se muestra resaltado en las respuestas y en los documentos del chat,
+  también cuando el resaltado contiene negrita o un enlace; ya no se ven los signos `==`. Una igualdad
+  (`a == b`) sigue siendo texto.
+- Cuando el agente cita un bloque concreto de un documento (`doc:ID#block-3`), la cita se lee «Guía › bloque 3» y
+  abre el documento.
+
 ## 0.8.0 — leer por partes se ve como una sola lectura (spec 058 de doctiling-web)
 
 - El agente ahora lee un documento grande por su índice y por partes. La actividad de un turno muestra **una línea
