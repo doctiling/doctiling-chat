@@ -59,3 +59,19 @@ describe('entity citations', () => {
     expect(citedDocumentIds('doc:kb-a1#Prototipo "G" y doc:kb-a1#Producción "G"')).toEqual(['kb-a1']);
   });
 });
+
+// doctiling-web spec 059 US6 (nb/86): the agent cites one block of a document.
+describe('block citations', () => {
+  it('TS-1076: doc:ID#block-N "Title" reads as the document and the block, and opens the document', () => {
+    const labels = { blockLabel: (n: number) => `bloque ${n}` };
+    expect(linkifyDocCitations('Plazo de 30 días [1] doc:kb1-g7#block-3 "Guía".', hrefFor, labels)).toBe(
+      'Plazo de 30 días [1] [Guía › bloque 3](/es/chat/kb/kb1/doc/kb1-g7).',
+    );
+  });
+
+  it('a graph entity still reads as the entity', () => {
+    expect(linkifyDocCitations('doc:kb1-g1#Cliente "Mapa"', hrefFor, { blockLabel: (n) => `bloque ${n}` })).toBe(
+      '[Mapa › Cliente](/es/chat/kb/kb1/doc/kb1-g1)',
+    );
+  });
+});
