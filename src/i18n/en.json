@@ -164,6 +164,24 @@
       "body": "Replies can be read aloud with your device's own voice.",
       "toggle": "Read new replies aloud",
       "unsupported": "This browser cannot read aloud."
+    },
+    "theme": {
+      "title": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Device",
+      "lightHint": "Always the light theme",
+      "darkHint": "Always the dark theme",
+      "systemHint": "Follow the device setting",
+      "hint": "A choice for this device; it applies at once, no reload."
+    },
+    "timezone": {
+      "title": "Time zone",
+      "instance": "Instance zone ({zone})",
+      "effective": "Effective: {zone}",
+      "loadFailed": "Your time zone could not be loaded.",
+      "saveFailed": "Your time zone could not be saved. Try again.",
+      "hint": "Dates and times in the chat and the studio are shown in this zone."
     }
   },
   "offline": {

@@ -2,6 +2,16 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.9.0 — tema claro/oscuro y zona horaria por persona (spec 068 de doctiling-web, US6)
+
+- **Tema** en Ajustes: claro, oscuro o el del dispositivo (FR-028..030). Es una preferencia del dispositivo
+  (`localStorage`, clave `doctiling-chat:theme`), se aplica de inmediato sin recargar, sigue al sistema mientras
+  esté en «Dispositivo» y se pone en `<html>` antes del primer pintado. El estudio aporta los tokens: el chat solo
+  alterna la clase `dark`.
+- **Zona horaria** en Ajustes: selector IANA con «Zona de la instancia» = null, leído y guardado en
+  `GET/PUT /api/me/timezone` (ruta del estudio, misma sesión). Un 404 sin cuerpo fuera de `/api/chat/*` ya no se
+  toma por «chat no habilitado».
+
 ## 0.8.0 — leer por partes se ve como una sola lectura (spec 058 de doctiling-web)
 
 - El agente ahora lee un documento grande por su índice y por partes. La actividad de un turno muestra **una línea
