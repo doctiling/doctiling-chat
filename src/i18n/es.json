@@ -165,6 +165,24 @@
       "body": "Las respuestas pueden leerse en voz alta con la voz de tu dispositivo.",
       "toggle": "Leer en voz alta las respuestas nuevas",
       "unsupported": "Este navegador no puede leer en voz alta."
+    },
+    "theme": {
+      "title": "Tema",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Dispositivo",
+      "lightHint": "Siempre el tema claro",
+      "darkHint": "Siempre el tema oscuro",
+      "systemHint": "Seguir la configuración del dispositivo",
+      "hint": "Es una elección de este dispositivo; se aplica de inmediato, sin recargar."
+    },
+    "timezone": {
+      "title": "Zona horaria",
+      "instance": "Zona de la instancia ({zone})",
+      "effective": "En uso: {zone}",
+      "loadFailed": "No se pudo cargar tu zona horaria.",
+      "saveFailed": "No se pudo guardar tu zona horaria. Inténtalo de nuevo.",
+      "hint": "Las fechas y horas del chat y del estudio se muestran en esta zona."
     }
   },
   "offline": {

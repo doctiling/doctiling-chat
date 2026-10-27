@@ -184,9 +184,19 @@ export type IndexResult = { id: string; ok: boolean; reason?: 'forbidden' | 'not
 
 export type AgentBody = { query: string; referencedDocumentIds?: string[] } | { resume: { pendingId: string; approved: boolean } };
 
+/**
+ * spec 068 (doctiling-web): the person's time zone, a studio-wide preference shared with the chat.
+ * `timezone` null = the instance zone applies; `effective` is what dates are shown in.
+ */
+export type TimezoneView = { timezone: string | null; instanceTimezone: string; effective: string };
+
 export type ChatApi = {
   fetch: (path: string, init?: RequestInit) => Promise<Response>;
   me: () => Promise<MeView>;
+  /** GET /api/me/timezone (studio route, same session). */
+  timezone: () => Promise<TimezoneView>;
+  /** PUT /api/me/timezone with `{ timezone }`; null = back to the instance zone. 400 `invalid_timezone`. */
+  setTimezone: (timezone: string | null) => Promise<TimezoneView>;
   knowledgeBases: () => Promise<{ items: KnowledgeBaseItem[] }>;
   session: (kbId: string) => Promise<SessionView>;
   clearSession: (kbId: string) => Promise<Response>;
@@ -230,7 +240,9 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
       go(signInUrl(signInHref, `${window.location.pathname}${window.location.search}`));
       throw new ApiError(401, body?.error ?? 'unauthenticated', body?.messageKey);
     }
-    if (res.status === 404 && !body) {
+    // Only the chat's own routes say "chat disabled" with a bare 404; a missing studio route
+    // (/api/me/*) is an ordinary not-found.
+    if (res.status === 404 && !body && path.startsWith('/api/chat/')) {
       if (!disabledSeen) {
         disabledSeen = true;
         onDisabled?.();
@@ -251,6 +263,8 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
   return {
     fetch: apiFetch,
     me: () => apiJson<MeView>('/api/chat/me'),
+    timezone: () => apiJson<TimezoneView>('/api/me/timezone'),
+    setTimezone: (timezone) => apiJson<TimezoneView>('/api/me/timezone', { method: 'PUT', body: JSON.stringify({ timezone }) }),
     knowledgeBases: () => apiJson<{ items: KnowledgeBaseItem[] }>('/api/chat/knowledge-bases'),
     session: (kbId) => apiJson<SessionView>(`${kb(kbId)}/session`),
     clearSession: (kbId) => apiFetch(`${kb(kbId)}/session/clear`, { method: 'POST' }),
