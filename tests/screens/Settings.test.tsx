@@ -64,7 +64,8 @@ describe('Settings (T068)', () => {
   it('a failed /me (not 401, not disabled) shows the account error', async () => {
     mockFetch([{ match: on('GET', '/api/chat/me'), respond: () => json({ error: 'unknown' }, 500) }]);
     renderApp(<Settings />);
-    expect(await screen.findByRole('alert')).toHaveTextContent(/could not be loaded/i);
+    // The unmocked time-zone route fails too (spec 068); the account alert is the first one.
+    expect((await screen.findAllByRole('alert'))[0]).toHaveTextContent(/your account could not be loaded/i);
   });
 });
 

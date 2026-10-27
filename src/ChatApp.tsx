@@ -13,6 +13,7 @@ import { RenderCodeProvider, type RenderCode } from './lib/render-code';
 import { SpeechProvider } from './lib/speech';
 import { setPrefs } from './lib/storage';
 import { makePaths, navigate, useRoute, type Route } from './lib/router';
+import { applyTheme, watchSystemTheme } from './lib/theme';
 import { Conversation } from './screens/Conversation';
 import { Documents } from './screens/Documents';
 import { KnowledgeBases } from './screens/KnowledgeBases';
@@ -124,6 +125,12 @@ export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref
   React.useEffect(() => {
     setPrefs({ entry: disabled ? 'studio' : 'chat' });
   }, [disabled]);
+  // spec 068 FR-028..030: the stored theme goes on <html> before the first paint (no flash of the
+  // wrong theme) and, while it is "system", follows the device without a reload.
+  React.useLayoutEffect(() => {
+    applyTheme();
+    return watchSystemTheme();
+  }, []);
   const value = React.useMemo<ChatContextValue>(
     () => ({ basePath: base, locale, signInHref, studioHref, signOutHref, version, api, paths: makePaths(base) }),
     [base, locale, signInHref, studioHref, signOutHref, version, api],
