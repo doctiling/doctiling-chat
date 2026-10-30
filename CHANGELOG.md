@@ -2,6 +2,13 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.9.1 — confirmación al agregar bloques y error «IA no disponible» (QA del agente, doctiling-web #261, #262)
+
+- Cuando pides una edición y el agente quiere **agregar bloques** al final de un documento, la tarjeta de
+  confirmación lo dice con su propia frase en vez del texto genérico.
+- Si el servidor no tiene ningún proveedor de IA con clave, el chat muestra «El asistente no está disponible…»
+  (código `provider_unavailable`) en vez de «Algo salió mal».
+
 ## 0.9.0 — tema claro/oscuro y zona horaria por persona (spec 068 de doctiling-web, US6)
 
 - **Tema** en Ajustes: claro, oscuro o el del dispositivo (FR-028..030). Es una preferencia del dispositivo

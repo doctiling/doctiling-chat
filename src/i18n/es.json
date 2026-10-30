@@ -98,6 +98,7 @@
         "delete_graph_entity": "Borrar la entidad \"{name}\" del grafo",
         "delete_graph_relation": "Borrar una relación de \"{name}\" del grafo",
         "delete_table_row": "Borrar una fila de la tabla \"{name}\"",
+        "append_blocks": "Agregar bloques nuevos al final de «{name}»: pediste una edición, así que el asistente pregunta antes",
         "generic": "Aplicar el cambio propuesto a \"{name}\""
       }
     },
@@ -116,6 +117,7 @@
       "aborted": "Detenido.",
       "sendFailed": "No se pudo enviar la petición.",
       "clearFailed": "No se puede limpiar la conversación mientras hay una petición en curso.",
+      "provider_unavailable": "El asistente no está disponible en este momento. Pide a tu administrador que revise la configuración de IA.",
       "unknown": "Algo falló. Intenta de nuevo."
     },
     "readOnlyBadge": "Solo lectura",
