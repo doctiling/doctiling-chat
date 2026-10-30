@@ -98,6 +98,7 @@
         "delete_graph_entity": "Delete the entity \"{name}\" from the graph",
         "delete_graph_relation": "Delete a relation of \"{name}\" from the graph",
         "delete_table_row": "Delete a row from the table \"{name}\"",
+        "append_blocks": "Add new blocks at the end of \"{name}\" — you asked for an edit, so the assistant checks first",
         "generic": "Apply the proposed change to \"{name}\""
       }
     },
@@ -116,6 +117,7 @@
       "aborted": "Stopped.",
       "sendFailed": "The request could not be sent.",
       "clearFailed": "The conversation could not be cleared while a request is running.",
+      "provider_unavailable": "The assistant isn't available right now. Ask your administrator to check the AI configuration.",
       "unknown": "Something went wrong. Try again."
     },
     "readOnlyBadge": "Read-only",
