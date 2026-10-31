@@ -118,6 +118,7 @@
       "sendFailed": "No se pudo enviar la petición.",
       "clearFailed": "No se puede limpiar la conversación mientras hay una petición en curso.",
       "provider_unavailable": "El asistente no está disponible en este momento. Pide a tu administrador que revise la configuración de IA.",
+      "empty_answer": "El asistente no produjo una respuesta esta vez. Inténtalo de nuevo o reformula tu pregunta.",
       "unknown": "Algo falló. Intenta de nuevo."
     },
     "readOnlyBadge": "Solo lectura",
