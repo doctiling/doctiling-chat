@@ -16,7 +16,8 @@ type Props = {
 type Picking = { name: string; sheets: ConvertedSheet[]; resolve: (chosen: ConvertedSheet[]) => void };
 
 // spec 054 FR-003: one or several files go through the server's converters one by one; text becomes a text
-// document, a sheet a table document (several sheets → the person picks). Nothing is indexed here.
+// document (a graph when the server found one in it), a sheet a table document (several sheets → the person picks).
+// Nothing is indexed here.
 export function ConvertFlow({ kbId, onDone }: Props) {
   const { t } = useLanguage();
   const { api } = useChat();
@@ -43,7 +44,11 @@ export function ConvertFlow({ kbId, onDone }: Props) {
       try {
         const result = await api.convertDocument(kbId, file);
         if (result.kind === 'text') {
-          created.push(await api.createDocument(kbId, { type: 'text', title: result.title, content: result.markdown }));
+          // A text that lists nodes and arrows arrives with its graph already built: it becomes a graph document.
+          const doc = result.graph
+            ? { type: 'graph' as const, title: result.title, content: result.graph }
+            : { type: 'text' as const, title: result.title, content: result.markdown };
+          created.push(await api.createDocument(kbId, doc));
           continue;
         }
         const chosen =

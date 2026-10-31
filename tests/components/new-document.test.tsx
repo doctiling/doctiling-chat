@@ -66,6 +66,19 @@ describe('NewDocumentSheet', () => {
     expect(bodies(calls, /\/documents\/index$/)).toEqual([{ documentIds: ['d1'] }]);
   });
 
+  it('a text that carries a graph becomes a graph document', async () => {
+    const graph = '{"version":1,"nodes":[{"id":"n1","label":"API"}],"edges":[]}';
+    const { calls } = mockFetch([
+      { match: on('POST', /\/documents\/convert$/), respond: () => json({ kind: 'text', title: 'Red', markdown: 'API -> Base', graph }) },
+      created(),
+    ]);
+    renderApp(<NewDocumentSheet kbId="kb-1" canCreate />);
+    const user = await openMethod(/^Convert/);
+    await user.upload(screen.getByTestId('convert-input'), new File(['API -> Base'], 'red.md', { type: 'text/markdown' }));
+    await screen.findByTestId('index-prompt');
+    expect(bodies(calls, /\/documents$/)).toEqual([{ type: 'graph', title: 'Red', content: graph }]);
+  });
+
   it('[TS-617] "Later" closes without indexing', async () => {
     const { calls } = mockFetch([
       { match: on('POST', /\/documents\/convert$/), respond: () => json({ kind: 'text', title: 'Plan', markdown: 'x' }) },
