@@ -2,6 +2,11 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.9.3 — error «respuesta vacía» con su propia frase (QA del agente, doctiling-web #277)
+
+- Si el agente no produce respuesta ni después del reintento del servidor, el chat muestra «El asistente no produjo
+  una respuesta esta vez…» (código `empty_answer`) en vez de «Algo salió mal».
+
 ## 0.9.2 — un texto con nodos se convierte en grafo (re-certificación del agente, doctiling-web #271)
 
 - Al convertir un archivo de texto que lista nodos y flechas (`A -> B`, `A → B`), el servidor ya trae el grafo

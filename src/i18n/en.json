@@ -118,6 +118,7 @@
       "sendFailed": "The request could not be sent.",
       "clearFailed": "The conversation could not be cleared while a request is running.",
       "provider_unavailable": "The assistant isn't available right now. Ask your administrator to check the AI configuration.",
+      "empty_answer": "The assistant didn't produce an answer this time. Try again or rephrase your question.",
       "unknown": "Something went wrong. Try again."
     },
     "readOnlyBadge": "Read-only",
