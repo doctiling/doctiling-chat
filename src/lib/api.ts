@@ -170,7 +170,7 @@ export type NewDocumentInput = { type: 'text' | 'database' | 'graph'; title: str
 export type ConvertedSheet = { name: string; rowCount: number; columnCount: number; table: { columns: unknown[]; rows: unknown[] } };
 
 /** POST …/documents/convert: what the file holds; nothing is saved until createDocument. */
-export type ConvertResult = { kind: 'text'; title: string; markdown: string } | { kind: 'sheets'; title: string; sheets: ConvertedSheet[] };
+export type ConvertResult = { kind: 'text'; title: string; markdown: string; graph?: string } | { kind: 'sheets'; title: string; sheets: ConvertedSheet[] };
 
 export type GenerateBody = { topic: string; deepReasoning?: boolean; locale?: 'en' | 'es' };
 

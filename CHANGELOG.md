@@ -2,6 +2,12 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.9.2 — un texto con nodos se convierte en grafo (re-certificación del agente, doctiling-web #271)
+
+- Al convertir un archivo de texto que lista nodos y flechas (`A -> B`, `A → B`), el servidor ya trae el grafo
+  construido y el chat crea un **documento de Grafo** en vez de uno de Texto. Sin grafo en la respuesta, todo sigue
+  igual (texto o tabla).
+
 ## 0.9.1 — confirmación al agregar bloques y error «IA no disponible» (QA del agente, doctiling-web #261, #262)
 
 - Cuando pides una edición y el agente quiere **agregar bloques** al final de un documento, la tarjeta de
