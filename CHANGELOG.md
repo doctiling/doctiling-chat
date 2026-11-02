@@ -2,6 +2,15 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.10.0 — la lista y el documento abierto se actualizan solos (spec 072, doctiling-web #276)
+
+- Un documento que el agente crea o cambia desde la conversación aparece en la lista de documentos y en el panel
+  del documento abierto sin recargar la página.
+- Con el studio en tiempo real (`GET /api/realtime?kb=…`, doctiling-web ≥ 0.50.0), la lista también sigue los
+  cambios hechos fuera del chat (otro miembro, un job, el indexado/OCR) y el documento abierto se refresca sin
+  perder el lugar de lectura. Tras una caída de red o un deploy, vuelve a cargar lo que ve.
+- Si el servidor no tiene tiempo real (responde 404), todo sigue como antes.
+
 ## 0.9.3 — error «respuesta vacía» con su propia frase (QA del agente, doctiling-web #277)
 
 - Si el agente no produce respuesta ni después del reintento del servidor, el chat muestra «El asistente no produjo

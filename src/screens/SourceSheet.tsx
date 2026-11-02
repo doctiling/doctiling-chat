@@ -8,6 +8,7 @@ import { useLanguage } from '../i18n/use-language';
 import { ApiError, type DocumentView } from '../lib/api';
 import { useChat } from '../lib/chat-context';
 import { useIsDesktop } from '../lib/media';
+import { ANY_DOCUMENT, useRealtime } from '../lib/realtime';
 import { speakableText } from '../lib/speakable';
 
 type Props = { kbId: string; docId: string | null; onClose: () => void };
@@ -43,6 +44,32 @@ export function SourceSheet({ kbId, docId, onClose }: Props) {
       cancelled = true;
     };
   }, [api, kbId, docId]);
+
+  // Spec 072: the open document follows its changes (the agent's, a job's, another member's). The
+  // current copy stays on screen while the new one loads, so the reader keeps their place; a failed
+  // refetch keeps what is shown.
+  const [version, setVersion] = React.useState(0);
+  useRealtime(api, docId ? kbId : null, (event) => {
+    if (event.type === 'resync') return setVersion((v) => v + 1);
+    const s = event.signal;
+    if (s.kind === 'doc.changed' && s.kbId === kbId && (s.docId === docId || s.docId === ANY_DOCUMENT)) setVersion((v) => v + 1);
+  });
+  React.useEffect(() => {
+    if (!docId || version === 0) return;
+    let cancelled = false;
+    api
+      .document(kbId, docId)
+      .then((d) => {
+        if (!cancelled) {
+          setDoc(d);
+          setError(null);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [api, kbId, docId, version]);
 
   const subtitle = doc
     ? doc.updatedAt

@@ -16,6 +16,7 @@ import { useLanguage } from '../i18n/use-language';
 import { ApiError, readNdjson, type Activity, type AgentBody, type AgentEvent, type Pending, type SessionAccess, type Turn, type TurnReference } from '../lib/api';
 import { useChat } from '../lib/chat-context';
 import { useDocuments } from '../lib/documents';
+import { appliedSignals, emitLocal } from '../lib/realtime';
 import { useIsDesktop } from '../lib/media';
 import { canCreateDocuments } from '../lib/new-document';
 import { reportNetworkFailure, reportNetworkSuccess } from '../lib/online';
@@ -176,6 +177,11 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
               push({ message: errorText(ev.error?.code ?? 'unknown'), kind: 'error', duration: 8000 });
               break;
             case 'Applied':
+              // Spec 072: the agent's write must show in the list and in an open document now,
+              // not after a reload (the owner's bug: a created document missing from the list).
+              for (const signal of appliedSignals(kbId, ev.action)) emitLocal(api, signal);
+              sawDone = true;
+              break;
             case 'Done':
               sawDone = true;
               break;
