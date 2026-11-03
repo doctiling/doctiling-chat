@@ -5,6 +5,7 @@
 // so a host remount (or a test render) starts clean.
 import * as React from 'react';
 import { ApiError, type ChatApi, type DocumentListItem } from './api';
+import { useRealtime, type RealtimeEvent } from './realtime';
 
 export type DocumentsEntry = {
   items: DocumentListItem[] | null;
@@ -15,9 +16,13 @@ export type DocumentsEntry = {
 export type DocumentsCache = {
   entries: Map<string, DocumentsEntry>;
   listeners: Set<() => void>;
+  /** Pending coalesced reloads, one per base (spec 072: a burst of signals = one fetch). */
+  timers: Map<string, ReturnType<typeof setTimeout>>;
 };
 
-export const createDocumentsCache = (): DocumentsCache => ({ entries: new Map(), listeners: new Set() });
+export const createDocumentsCache = (): DocumentsCache => ({ entries: new Map(), listeners: new Set(), timers: new Map() });
+
+export const RELOAD_DEBOUNCE_MS = 300;
 
 const EMPTY: DocumentsEntry = { items: null, error: null, promise: null };
 
@@ -44,6 +49,26 @@ export function loadDocuments(cache: DocumentsCache, api: ChatApi, kbId: string,
   cache.entries.set(kbId, { items: force ? null : (current?.items ?? null), error: null, promise });
   notify(cache);
   return promise;
+}
+
+/** A reload of `kbId` within RELOAD_DEBOUNCE_MS; calls inside the window collapse into one fetch. */
+export function scheduleReload(cache: DocumentsCache, api: ChatApi, kbId: string) {
+  if (cache.timers.has(kbId)) return;
+  cache.timers.set(
+    kbId,
+    setTimeout(() => {
+      cache.timers.delete(kbId);
+      void loadDocuments(cache, api, kbId, true);
+    }, RELOAD_DEBOUNCE_MS),
+  );
+}
+
+/** Signals that change what the list shows (a new, renamed, moved or deleted document; index/OCR status). */
+export function affectsList(event: RealtimeEvent, kbId: string): boolean {
+  if (event.type === 'resync') return true;
+  const s = event.signal;
+  if (!('kbId' in s) || s.kbId !== kbId) return false;
+  return s.kind === 'kb.documents' || s.kind === 'doc.index' || s.kind === 'doc.ocr';
 }
 
 const DocumentsContext = React.createContext<DocumentsCache | null>(null);
@@ -80,6 +105,9 @@ export function useDocuments(api: ChatApi, kbId: string) {
   React.useEffect(() => {
     void loadDocuments(cache, api, kbId);
   }, [cache, api, kbId]);
+  useRealtime(api, kbId, (event) => {
+    if (affectsList(event, kbId)) scheduleReload(cache, api, kbId);
+  });
   const reload = React.useCallback(() => loadDocuments(cache, api, kbId, true), [cache, api, kbId]);
   return { items: entry.items, error: entry.error, loading: entry.promise !== null, reload };
 }

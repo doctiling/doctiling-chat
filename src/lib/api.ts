@@ -209,6 +209,8 @@ export type ChatApi = {
   /** NDJSON stream of GenerateEvent, ending in Saved or Error. */
   generateDocument: (kbId: string, body: GenerateBody, signal: AbortSignal) => Promise<Response>;
   indexDocuments: (kbId: string, documentIds: string[]) => Promise<IndexResult[]>;
+  /** Spec 072 (doctiling-web): the change-signal stream of a base (`GET /api/realtime?kb=`), same session. */
+  realtimeUrl: (kbId: string) => string;
 };
 
 export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo }: ChatApiConfig): ChatApi {
@@ -262,6 +264,7 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
 
   return {
     fetch: apiFetch,
+    realtimeUrl: (kbId) => `${base}/api/realtime?kb=${encodeURIComponent(kbId)}`,
     me: () => apiJson<MeView>('/api/chat/me'),
     timezone: () => apiJson<TimezoneView>('/api/me/timezone'),
     setTimezone: (timezone) => apiJson<TimezoneView>('/api/me/timezone', { method: 'PUT', body: JSON.stringify({ timezone }) }),

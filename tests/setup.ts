@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { resetRealtime } from '../src/lib/realtime';
 
 // Node ≥ 22 exposes a native `localStorage` that, without --localstorage-file, is an
 // object with no methods and shadows jsdom's. Replace it with an in-memory Storage so
@@ -41,6 +42,8 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  // Spec 072: the realtime channels are module state; a test must not inherit another's stream.
+  resetRealtime();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
