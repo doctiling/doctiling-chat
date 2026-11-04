@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { splitSentences } from './speakable';
+import { pickVoice, speechLang } from './voice';
 
 type SpeechApi = {
   /** The browser can speak (no server voice: this is the device's own). */
@@ -42,6 +43,9 @@ export function SpeechProvider({ language, children }: { language: string; child
       const sentences = splitSentences(text);
       if (!synth || sentences.length === 0) return;
       synth.cancel();
+      const lang = speechLang(language, typeof navigator !== 'undefined' ? (navigator.languages ?? []) : []);
+      // Chosen per run: the voice list loads late, and is empty on the first call in some browsers.
+      const voice = pickVoice(synth.getVoices?.() ?? [], lang);
       const run = ++runRef.current;
       setSpeakingId(id);
       setPaused(false);
@@ -52,7 +56,8 @@ export function SpeechProvider({ language, children }: { language: string; child
           return;
         }
         const u = new SpeechSynthesisUtterance(sentences[i]);
-        u.lang = language;
+        u.lang = lang;
+        if (voice) u.voice = voice;
         u.onend = () => speakAt(i + 1);
         u.onerror = () => {
           if (run === runRef.current) setSpeakingId(null);
@@ -83,8 +88,12 @@ export function SpeechProvider({ language, children }: { language: string; child
     [speakingId, paused, start],
   );
 
-  // Leaving the screen silences the voice.
-  React.useEffect(() => () => synthesis()?.cancel(), []);
+  // Leaving the screen silences the voice. Asking for the voices early makes the browser load them.
+  React.useEffect(() => {
+    const synth = synthesis();
+    synth?.getVoices?.();
+    return () => synth?.cancel();
+  }, []);
 
   const value = React.useMemo<SpeechApi>(
     () => ({ supported, speakingId, paused, toggle, stop }),

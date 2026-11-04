@@ -31,3 +31,22 @@ describe('splitSentences', () => {
     expect(splitSentences('  \n\n ')).toEqual([]);
   });
 });
+
+// Owner QA 2026-11-04: the voice read the citations aloud, ids and block numbers included.
+describe('speakableText — citations are not read', () => {
+  it('drops doc citations, with or without block, entity or title', () => {
+    const md =
+      'Son 10 charlas doc:kb1-abc2#block-2 "Información general". Hay workshop [doc:kb1-abc3] y café [[doc:kb1-abc4]].';
+    expect(speakableText(md)).toBe('Son 10 charlas. Hay workshop y café.');
+  });
+
+  it('keeps the title the model wrote in prose and drops the id after it', () => {
+    expect(speakableText('Según "Preguntas frecuentes" (doc:kb1-abc5), hay parqueadero.')).toBe(
+      'Según Preguntas frecuentes, hay parqueadero.',
+    );
+  });
+
+  it('drops block markers like #2, [#2] and «› #2»', () => {
+    expect(speakableText('Escenario 1 [#2] y Escenario 2 (#3). Agenda › #4.')).toBe('Escenario 1 y Escenario 2. Agenda.');
+  });
+});

@@ -73,3 +73,14 @@ describe('public chat mode', () => {
     expect(within(box).getByText(/no está disponible/i)).toBeInTheDocument();
   });
 });
+
+// Owner QA 2026-11-04: the reCAPTCHA badge covered the send button; the host hides it and
+// the chat states the notice in its own footer instead.
+describe('public chat mode — human check notice', () => {
+  it('states the reCAPTCHA notice under the composer', async () => {
+    mockFetch([{ match: on('GET', BASE), respond: () => json({ name: 'Tech Day' }) }]);
+    renderPublic();
+    await screen.findByRole('heading', { name: 'Tech Day' });
+    expect(screen.getByText(/protegido por reCAPTCHA/i)).toBeInTheDocument();
+  });
+});
