@@ -119,7 +119,11 @@
       "clearFailed": "No se puede limpiar la conversación mientras hay una petición en curso.",
       "provider_unavailable": "El asistente no está disponible en este momento. Pide a tu administrador que revise la configuración de IA.",
       "empty_answer": "El asistente no produjo una respuesta esta vez. Inténtalo de nuevo o reformula tu pregunta.",
-      "unknown": "Algo falló. Intenta de nuevo."
+      "unknown": "Algo falló. Intenta de nuevo.",
+      "human_check": "No pudimos verificar que eres una persona. Recarga la página e inténtalo de nuevo.",
+      "rate_limited": "Estás enviando preguntas muy rápido. Espera un momento e inténtalo de nuevo.",
+      "daily_cap": "Este chat alcanzó su límite de preguntas por hoy. Vuelve mañana.",
+      "unavailable": "Este chat no está disponible en este momento."
     },
     "readOnlyBadge": "Solo lectura",
     "placeholderReadOnly": "Pregunta a esta base (solo lectura)…",
@@ -338,5 +342,12 @@
     "indexLabel": "Indexar \"{title}\"",
     "done": "\"{title}\" indexado.",
     "failed": "No se pudo indexar \"{title}\"."
+  },
+  "publicChat": {
+    "historyHint": "Tus conversaciones se guardan solo en este navegador.",
+    "unavailable": {
+      "title": "Este chat no está disponible",
+      "body": "El enlace se apagó o cambió. Pide el enlace actualizado a quien te lo compartió."
+    }
   }
 }

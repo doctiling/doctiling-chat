@@ -2,6 +2,18 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.11.0 — modo público: el chat de una base para quien tenga el enlace (spec 074, doctiling-web ≥ 0.52.0)
+
+- `ChatApp` acepta `publicChat: { slug, getHumanToken? }`: una sola base, sin inicio de sesión, contra
+  `/api/public/chat/{slug}` (doctiling-web). Sin lista de bases ni de documentos, sin compartir, sin crear
+  documentos ni tiempo real; se puede abrir la fuente de una cita.
+- El historial del visitante vive solo en su navegador (localStorage por enlace, últimos 100 turnos; en memoria si el
+  navegador no permite guardar). Cada pregunta lleva los últimos 12 turnos en texto y una verificación anti-bots que
+  pide el host. «Limpiar conversación» borra el historial de ese navegador.
+- Avisos propios para los rechazos del servidor: verificación humana, límite por visitante, tope diario y enlace
+  apagado o regenerado («Este chat no está disponible»).
+- Escritorio: la conversación ocupa todo el ancho de la ventana (ya no queda una franja vacía a la derecha).
+
 ## 0.10.0 — la lista y el documento abierto se actualizan solos (spec 072, doctiling-web #276)
 
 - Un documento que el agente crea o cambia desde la conversación aparece en la lista de documentos y en el panel

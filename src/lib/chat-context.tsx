@@ -14,6 +14,8 @@ export type ChatContextValue = {
   version: string;
   api: ChatApi;
   paths: Paths;
+  /** Spec 074 (doctiling-web): a visitor of one public chat — no studio controls, history in the browser. */
+  publicMode?: boolean;
 };
 
 const ChatContext = React.createContext<ChatContextValue | null>(null);
