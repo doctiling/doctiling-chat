@@ -13,7 +13,7 @@ import { makePaths } from '../../src/lib/router';
 export const API = 'https://studio.tenant.test';
 
 /** What the host (doctiling-web) passes to <ChatApp> for the Spanish studio. */
-export const HOST: Required<Omit<ChatAppProps, 'renderCode'>> = {
+export const HOST: Required<Omit<ChatAppProps, 'renderCode' | 'publicChat'>> = {
   basePath: '/es/chat',
   locale: 'es',
   apiBase: API,

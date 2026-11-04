@@ -7,6 +7,9 @@ import { UpdateToast } from './components/UpdateToast';
 import type { Language } from './i18n';
 import { LanguageProvider, useLanguage } from './i18n/use-language';
 import { createChatApi } from './lib/api';
+import { createPublicChatApi } from './lib/public-api';
+import { createPublicHistory } from './lib/public-history';
+import { PublicShell } from './screens/PublicShell';
 import { ChatProvider, type ChatContextValue } from './lib/chat-context';
 import { useIsDesktop } from './lib/media';
 import { RenderCodeProvider, type RenderCode } from './lib/render-code';
@@ -43,6 +46,12 @@ export type ChatAppProps = {
   version?: string;
   /** Draws a fenced block that declares a language (e.g. a diagram); null keeps it as code. */
   renderCode?: RenderCode;
+  /**
+   * Spec 074 (doctiling-web): a knowledge base's public chat — one base, no
+   * session, the visitor's history kept in their browser. `getHumanToken`
+   * returns a fresh human-check token per question (the host owns the captcha).
+   */
+  publicChat?: { slug: string; getHumanToken?: () => Promise<string | undefined> };
 };
 
 // FR-022: the shell follows the visual viewport so the composer stays above
@@ -113,18 +122,24 @@ function Router({ basePath }: { basePath: string }) {
   }
 }
 
-export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref, signOutHref, version = 'dev', renderCode }: ChatAppProps) {
+export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref, signOutHref, version = 'dev', renderCode, publicChat }: ChatAppProps) {
   const base = basePath.replace(/\/+$/, '') || '/';
   const [disabled, setDisabled] = React.useState(false);
+  const publicSlug = publicChat?.slug;
+  const getHumanToken = publicChat?.getHumanToken;
   const api = React.useMemo(
-    () => createChatApi({ apiBase, signInHref, onDisabled: () => setDisabled(true) }),
-    [apiBase, signInHref],
+    () =>
+      publicSlug
+        ? createPublicChatApi({ apiBase, slug: publicSlug, locale, history: createPublicHistory(), getHumanToken })
+        : createChatApi({ apiBase, signInHref, onDisabled: () => setDisabled(true) }),
+    [apiBase, signInHref, publicSlug, locale, getHumanToken],
   );
   // Being in the chat is the choice that makes a phone open the chat next time (spec 057); a tenant
   // whose chat is off has no chat to open, so its entry is the studio.
   React.useEffect(() => {
+    if (publicSlug) return; // a visitor has no studio; their choice of entry is not ours to record
     setPrefs({ entry: disabled ? 'studio' : 'chat' });
-  }, [disabled]);
+  }, [disabled, publicSlug]);
   // spec 068 FR-028..030: the stored theme goes on <html> before the first paint (no flash of the
   // wrong theme) and, while it is "system", follows the device without a reload.
   React.useLayoutEffect(() => {
@@ -132,8 +147,8 @@ export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref
     return watchSystemTheme();
   }, []);
   const value = React.useMemo<ChatContextValue>(
-    () => ({ basePath: base, locale, signInHref, studioHref, signOutHref, version, api, paths: makePaths(base) }),
-    [base, locale, signInHref, studioHref, signOutHref, version, api],
+    () => ({ basePath: base, locale, signInHref, studioHref, signOutHref, version, api, paths: makePaths(base), publicMode: !!publicSlug }),
+    [base, locale, signInHref, studioHref, signOutHref, version, api, publicSlug],
   );
   return (
     <ChatProvider value={value}>
@@ -141,7 +156,9 @@ export function ChatApp({ basePath, locale, apiBase = '', signInHref, studioHref
         <RenderCodeProvider value={renderCode}>
           <SpeechProvider language={locale}>
             <ToastProvider>
-              {disabled ? (
+              {publicSlug ? (
+                <PublicShell basePath={base} slug={publicSlug} />
+              ) : disabled ? (
                 <NotEnabled />
               ) : (
                 <>

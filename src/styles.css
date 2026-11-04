@@ -28,6 +28,10 @@
 .desktop-shell .app-shell {
   height: 100%;
   max-width: none;
+  /* Auto side margins stop a flex child from stretching: the column would
+     shrink to its content and leave a gap on the right. */
+  margin: 0;
+  width: 100%;
   padding-top: 0;
 }
 

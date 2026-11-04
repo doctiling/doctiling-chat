@@ -81,7 +81,10 @@ function channelFor(url: string): Channel {
 
 /** Listen to the signals of `kbId`; the returned function unsubscribes (and closes the stream when idle). */
 export function subscribeRealtime(api: Pick<ChatApi, 'realtimeUrl'>, kbId: string, listener: RealtimeListener): () => void {
-  const channel = channelFor(api.realtimeUrl(kbId));
+  const url = api.realtimeUrl(kbId);
+  // No URL = no live updates for this host (a public chat visitor): nothing to open.
+  if (!url) return () => {};
+  const channel = channelFor(url);
   channel.listeners.add(listener);
   if (channel.listeners.size === 1 && !channel.source) open(channel);
   return () => {

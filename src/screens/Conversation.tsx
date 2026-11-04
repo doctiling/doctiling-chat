@@ -39,7 +39,7 @@ const uid = () => `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}
 // screen (ref guard), AbortController to stop, no automatic reconnection.
 export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
   const { t, language } = useLanguage();
-  const { api, paths } = useChat();
+  const { api, paths, publicMode } = useChat();
   const { push } = useToast();
   const desktop = useIsDesktop();
   const { items: documents, reload: reloadDocuments } = useDocuments(api, kbId);
@@ -195,7 +195,7 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
           } else if (e.code === 'network') {
             reportNetworkFailure();
             push({ message: errorText('network'), kind: 'error' });
-          } else if (e.status === 409 || e.status === 403 || e.status === 400) {
+          } else if (e.status === 409 || e.status === 403 || e.status === 400 || (publicMode && (e.status === 429 || e.status === 404))) {
             // A 409 means the user turn never reached the server: drop the optimistic copy.
             if ('query' in body) setTurns((ts) => ts.filter((x) => x.id !== userTurnId));
             setNotice(errorText(e.code));
@@ -215,7 +215,7 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
         if (sawDone || !controller.signal.aborted) void load();
       }
     },
-    [api, kbId, t, language, push, errorText, load, documents],
+    [api, kbId, t, language, push, errorText, load, documents, publicMode],
   );
 
   const stop = React.useCallback(() => {
@@ -258,9 +258,11 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
       <div className="flex min-h-0 flex-1 flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <header className="flex items-center gap-1 border-b border-border px-2 py-1.5 md:px-4">
-        <IconButton label={t('app.back')} onClick={() => navigate(paths.kbs())} className="md:hidden">
-          <ArrowLeft strokeWidth={1.75} />
-        </IconButton>
+        {!publicMode && (
+          <IconButton label={t('app.back')} onClick={() => navigate(paths.kbs())} className="md:hidden">
+            <ArrowLeft strokeWidth={1.75} />
+          </IconButton>
+        )}
         <h1 className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{resolvedName ?? t('kb.title')}</h1>
         {readOnly && (
           <SimpleTooltip label={t('conversation.readOnly')} side="bottom">
@@ -269,12 +271,16 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
             </Badge>
           </SimpleTooltip>
         )}
-        <IconButton label={t('share.conversation')} onClick={() => void share()}>
-          <Share2 strokeWidth={1.75} />
-        </IconButton>
-        <IconButton label={docsOpen ? t('documents.close') : t('documents.title')} onClick={toggleDocs} aria-pressed={desktop ? docsOpen : undefined}>
-          <Files strokeWidth={1.75} />
-        </IconButton>
+        {!publicMode && (
+          <>
+            <IconButton label={t('share.conversation')} onClick={() => void share()}>
+              <Share2 strokeWidth={1.75} />
+            </IconButton>
+            <IconButton label={docsOpen ? t('documents.close') : t('documents.title')} onClick={toggleDocs} aria-pressed={desktop ? docsOpen : undefined}>
+              <Files strokeWidth={1.75} />
+            </IconButton>
+          </>
+        )}
         <IconButton label={t('conversation.clear')} onClick={() => setClearOpen(true)} disabled={running || turns.length === 0}>
           <Trash2 strokeWidth={1.75} />
         </IconButton>
@@ -319,17 +325,19 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
         onStop={stop}
         running={running}
         disabled={!loaded || loadError || !!pending}
-        hint={`${t('conversation.hint')} ${t('conversation.mentionHint')}`}
+        hint={publicMode ? `${t('conversation.hint')} ${t('publicChat.historyHint')}` : `${t('conversation.hint')} ${t('conversation.mentionHint')}`}
         placeholder={readOnly ? t('conversation.placeholderReadOnly') : undefined}
         prefill={prefill}
         documents={documents}
         leading={
+          publicMode ? undefined : (
           <NewDocumentSheet
             kbId={kbId}
             canCreate={canCreateDocuments(access?.role)}
             onCreated={() => void reloadDocuments()}
             onAskAgent={(doc) => setPrefill({ text: t('newDocument.created.askAgentText'), nonce: Date.now(), references: [doc] })}
           />
+          )
         }
       />
       <Sheet open={clearOpen} onOpenChange={setClearOpen} heading={t('conversation.clearConfirm.title')} description={t('conversation.clearConfirm.body')}>

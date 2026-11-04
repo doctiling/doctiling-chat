@@ -119,7 +119,11 @@
       "clearFailed": "The conversation could not be cleared while a request is running.",
       "provider_unavailable": "The assistant isn't available right now. Ask your administrator to check the AI configuration.",
       "empty_answer": "The assistant didn't produce an answer this time. Try again or rephrase your question.",
-      "unknown": "Something went wrong. Try again."
+      "unknown": "Something went wrong. Try again.",
+      "human_check": "We couldn't verify you are a person. Reload the page and try again.",
+      "rate_limited": "You're sending questions too fast. Wait a moment and try again.",
+      "daily_cap": "This chat reached its question limit for today. Come back tomorrow.",
+      "unavailable": "This chat is not available right now."
     },
     "readOnlyBadge": "Read-only",
     "placeholderReadOnly": "Ask this knowledge base (read-only)…",
@@ -338,5 +342,12 @@
     "indexLabel": "Index \"{title}\"",
     "done": "\"{title}\" indexed.",
     "failed": "\"{title}\" could not be indexed."
+  },
+  "publicChat": {
+    "historyHint": "Your conversations are kept only in this browser.",
+    "unavailable": {
+      "title": "This chat is not available",
+      "body": "The link was turned off or changed. Ask whoever shared it for the current link."
+    }
   }
 }
