@@ -344,6 +344,7 @@
     "failed": "\"{title}\" could not be indexed."
   },
   "publicChat": {
+    "recaptchaNotice": "Protected by reCAPTCHA: the Google Privacy Policy and Terms of Service apply.",
     "historyHint": "Your conversations are kept only in this browser.",
     "unavailable": {
       "title": "This chat is not available",

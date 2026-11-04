@@ -116,3 +116,18 @@ describe('useSpeech', () => {
     expect(result.current.speakingId).toBeNull();
   });
 });
+
+// Owner QA 2026-11-04: reading used the system default voice (robotic); now the best one for the language.
+describe('useSpeech — voice', () => {
+  it('reads with the most natural voice for the language', () => {
+    const { synth, spoken } = installSpeech();
+    const voices = [
+      { name: 'Shelley', lang: 'es-ES', localService: true, default: true },
+      { name: 'Google español', lang: 'es-ES', localService: false, default: false },
+    ];
+    synth.getVoices = () => voices as never;
+    const { result } = renderHook(() => useSpeech(), { wrapper });
+    act(() => result.current.toggle('a', 'Hola.'));
+    expect((spoken[0] as unknown as { voice?: { name: string } }).voice?.name).toBe('Google español');
+  });
+});

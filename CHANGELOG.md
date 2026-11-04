@@ -2,6 +2,15 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.11.1 — voz natural, citas que no se leen en voz alta, aviso anti-bots en el pie (doctiling-web ≥ 0.52.2)
+
+- Leer en voz alta elige la voz más natural del dispositivo para el idioma (misma elección que el studio) en vez de
+  la voz por defecto del sistema, que a menudo es una voz compacta o robótica.
+- La lectura en voz alta ya no dice las citas: se quitan `doc:ID`, `#bloque`, `[#2]` y `› #2`; de `"Título" (doc:ID)`
+  se lee solo el título.
+- Modo público: el pie del chat lleva el aviso de reCAPTCHA, para que el host oculte el sello flotante que tapaba el
+  botón de enviar.
+
 ## 0.11.0 — modo público: el chat de una base para quien tenga el enlace (spec 074, doctiling-web ≥ 0.52.0)
 
 - `ChatApp` acepta `publicChat: { slug, getHumanToken? }`: una sola base, sin inicio de sesión, contra
