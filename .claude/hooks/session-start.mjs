@@ -9,10 +9,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { readInput, loadConfig, allow, tareaActiva, rutaDeEstado, REPO_ROOT } from "./harness.mjs";
+import { readInput, loadConfig, allow, firstMatch, tareaActiva, rutaDeEstado, REPO_ROOT, CONFIG_PATH, DEFAULT_STATUS_JOURNAL } from "./harness.mjs";
 
 await readInput();
-const config = loadConfig() ?? {};
+const leido = loadConfig();
+const config = leido ?? {};
 
 const git = (args) => spawnSync("git", args, { cwd: REPO_ROOT, encoding: "utf8" }).stdout?.trim() ?? "";
 
@@ -28,6 +29,27 @@ lines.push(
     ? `- Sin commitear: ${dirty.length} archivo(s) — ${dirty.slice(0, 5).map((l) => l.slice(3)).join(", ")}${dirty.length > 5 ? ", …" : ""}`
     : "- Working tree limpio.",
 );
+
+// Alarma: el config existe y no parsea. Los hooks fallan ABIERTOS (P5: un arnés roto no bloquea
+// al humano), así que en esta sesión no frena nada — y sin este aviso, nadie se entera: el
+// silencio de un freno apagado es igual al de un freno que no tuvo nada que frenar.
+if (!leido && fs.existsSync(CONFIG_PATH)) {
+  lines.push(
+    "- 🚨 `.claude/harness.config.json` NO parsea (o no es un objeto): TODOS los frenos del arnés están APAGADOS en esta sesión (fallan abiertos, P5). " +
+      "Que lo arregle el humano antes de seguir; `node scripts/harness-selftest.mjs` dice dónde se rompió.",
+  );
+}
+
+// Alarma: rutas protegidas con cambios sin commitear. El agente no las puede escribir, así que un
+// cambio ahí lo hizo alguien por afuera del arnés (el humano, o un rodeo que ningún freno vio).
+// Con `git status` que ya se leyó: ningún proceso más.
+const tocadas = dirty.map((l) => l.slice(3).split(" -> ").pop()).filter((f) => firstMatch(config.protectedPaths, f));
+if (tocadas.length) {
+  lines.push(
+    `- ⚠️ Rutas protegidas con cambios sin commitear: ${tocadas.slice(0, 5).map((f) => `\`${f}\``).join(", ")}${tocadas.length > 5 ? ", …" : ""}. ` +
+      "Si no los hizo el humano, mostráselos (`git diff`) antes de seguir.",
+  );
+}
 
 // Alerta: la rama ya está atrás de la base. Sin `fetch` —la red no se paga en cada sesión—:
 // con las refs que hay, que es lo mismo que va a ver el agente si arranca a trabajar ahora.
@@ -77,6 +99,23 @@ const statusFile = path.join(REPO_ROOT, config.status?.file ?? "STATUS.md");
 if (fs.existsSync(statusFile)) {
   const status = fs.readFileSync(statusFile, "utf8").split("\n").slice(0, 40).join("\n");
   lines.push("", "### STATUS.md (encabezado)", status);
+  // The ledger's journal (status.events): verdicts the gate recorded that STATUS.md does not show yet.
+  // Only when STATUS.md already IS a ledger: on a prose file, `sync` has nothing to append to, and
+  // pointing the agent there was the reviewer's blocker (it rewrote the prose).
+  if (config.status?.events) {
+    const journal = rutaDeEstado(config.status.events.journal ?? DEFAULT_STATUS_JOURNAL);
+    let pendientes = 0;
+    for (const f of [journal, `${journal}.ingesting`]) {
+      try {
+        pendientes += fs.readFileSync(f, "utf8").split("\n").filter(Boolean).length;
+      } catch {
+        /* no journal: nothing pending */
+      }
+    }
+    const esBitacora = fs.readFileSync(statusFile, "utf8").includes("<!-- status:projection:begin");
+    if (pendientes && esBitacora) lines.push("", `- ⚠️ ${pendientes} evento(s) del gate esperan en la bitácora: el encabezado de arriba está atrasado. \`node scripts/status.mjs sync\`.`);
+    else if (pendientes) lines.push("", `- ⚠️ ${pendientes} veredicto(s) del gate anotados, pero \`${config.status.file ?? "STATUS.md"}\` sigue en prosa: \`node scripts/status.mjs migrate\` (dry-run) antes de cualquier \`sync\`.`);
+  }
 } else {
   lines.push(`- ⚠️ Falta \`${config.status?.file ?? "STATUS.md"}\`: nadie sabe qué está verificado.`);
 }

@@ -191,7 +191,10 @@ export async function readInput() {
 /** Carga la config del arnés. Un config ausente o inválido NO debe bloquear al humano. */
 export function loadConfig() {
   try {
-    return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+    const v = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+    // `null`, `[]` o un escalar parsean y no son un config: se tratan como ausente, para que el
+    // aviso de `session-start` salga igual que con uno que no parsea.
+    return v && typeof v === "object" && !Array.isArray(v) ? v : null;
   } catch {
     return null;
   }
@@ -279,37 +282,59 @@ export const segmentosDeRuta = (abs, plataforma = process.platform) =>
  */
 export const esUnidadPelada = (p) => /^[A-Za-z]:$/.test(p);
 
+/**
+ * Los prefijos de la ruta que EXISTEN, de la raíz hacia abajo, con su `realpath` (null en la
+ * unidad pelada de Windows y en lo que no existe). Con la ruta ya normalizada (sin `..`:
+ * `rutasAbsolutas` la resuelve), lo que existe es un tramo inicial: si un directorio no existe,
+ * nada debajo de él existe, así que se corta en el primer faltante DESPUÉS de haber entrado a un
+ * directorio real. Antes de eso se sigue, con un tope: en un share de Windows
+ * (`\\server\share\repo`), `\\server` no resuelve y `\\server\share` sí.
+ *
+ * Antes se subía desde la ruta ENTERA rearmando cada prefijo: cuadrático. Una ruta de 128k
+ * segmentos colgaba `protected-paths` hasta el timeout de Claude Code, y un hook muerto por
+ * timeout deja correr la herramienta (lo encontró el grupo `robustness` del eval determinista).
+ */
+const FALTANTES_ANTES_DE_ENTRAR = 4;
+function prefijosReales(partes) {
+  const reales = [];
+  let prefijo = "";
+  let adentro = false;
+  let faltantes = 0;
+  for (let i = 1; i <= partes.length; i += 1) {
+    prefijo = i === 1 ? partes[0] : `${prefijo}${path.sep}${partes[i - 1]}`;
+    const p = prefijo || path.sep;
+    if (esUnidadPelada(p)) {
+      reales.push(null);
+      continue;
+    }
+    try {
+      reales.push(fs.realpathSync(p));
+      if (p !== path.sep && partes[i - 1] !== "") adentro = true;
+    } catch {
+      // Una escritura nueva: lo que falta debajo de un directorio real no existe.
+      if (adentro || (faltantes += 1) > FALTANTES_ANTES_DE_ENTRAR) break;
+      reales.push(null);
+    }
+  }
+  return reales;
+}
+
 function relativaAlRepo(abs) {
   const partes = segmentosDeRuta(abs);
-  for (let i = partes.length; i > 0; i -= 1) {
-    const prefijo = partes.slice(0, i).join(path.sep) || path.sep;
-    if (esUnidadPelada(prefijo)) continue;
-    let real;
-    try {
-      real = fs.realpathSync(prefijo);
-    } catch {
-      continue; // ese prefijo todavía no existe (es una escritura nueva): se sigue subiendo
-    }
-    if (real === REPO_ROOT) return partes.slice(i).join("/");
-  }
+  const reales = prefijosReales(partes);
+  for (let i = reales.length; i > 0; i -= 1) if (reales[i - 1] === REPO_ROOT) return partes.slice(i).join("/");
   return null;
 }
 
 /** La ruta con los symlinks del ancestro existente resueltos (el archivo puede no existir). */
 function conSymlinksResueltos(abs) {
-  let dir = abs;
-  const resto = [];
-  while (!fs.existsSync(dir)) {
-    const padre = path.dirname(dir);
-    if (padre === dir) return abs;
-    resto.unshift(path.basename(dir));
-    dir = padre;
-  }
-  try {
-    return path.join(fs.realpathSync(dir), ...resto);
-  } catch {
-    return abs;
-  }
+  const partes = segmentosDeRuta(abs);
+  const reales = prefijosReales(partes);
+  let i = reales.length;
+  while (i > 0 && !reales[i - 1]) i -= 1;
+  if (!i) return abs;
+  // Un string y no `...partes`: con 128k segmentos, el spread desborda la pila (exit 1).
+  return path.join(reales[i - 1], partes.slice(i).join(path.sep));
 }
 
 /**
@@ -324,7 +349,11 @@ function rutasAbsolutas(input, config) {
   return camposDeRuta(input, config)
     .map((c) => ti[c].trim())
     .filter((raw) => raw || mcp)
-    .map((raw) => (path.isAbsolute(raw) ? raw : path.join(base, raw)));
+    // `resolve` y no `join` para las absolutas también: sin normalizar, `<repo>/nope/../src/x`
+    // llegaba con su `..` crudo, y una regla anclada (`^src/`) no lo veía. Normalizar es lo que
+    // hace verdadera la premisa de `prefijosReales` (sin `..`, si un prefijo no existe, ninguno
+    // más largo existe).
+    .map((raw) => (path.isAbsolute(raw) ? path.resolve(raw) : path.resolve(base, raw)));
 }
 
 /** La primera: alcanza para «¿esto es código?» y para el mensaje. */
@@ -397,12 +426,18 @@ export function proposedContent(input, config) {
   return campos.map((c) => ti[c]).find((v) => typeof v === "string") ?? "";
 }
 
-/** Primer patrón de `rules` que casa con `text` (cada regla es {pattern, ...}). */
+/**
+ * Primer patrón de `rules` que casa con `text` (cada regla es {pattern, flags?, ...}).
+ *
+ * `flags` de la REGLA gana sobre el default: sin él, todo se evaluaba sin distinguir
+ * mayúsculas y `git branch -D` (borrado forzado) no se podía separar de `git branch -d`
+ * (el seguro). El default sigue siendo `i` para no cambiar ningún repo ya portado (P3).
+ */
 export function firstMatch(rules, text, flags = "i") {
   for (const rule of rules ?? []) {
     let re;
     try {
-      re = new RegExp(rule.pattern, flags);
+      re = new RegExp(rule.pattern, typeof rule.flags === "string" ? rule.flags : flags);
     } catch {
       continue; // patrón inválido: lo caza el self-test, no el turno del usuario
     }
@@ -416,10 +451,18 @@ export function underAny(relPath, prefixes) {
   return (prefixes ?? []).some((p) => relPath === p || relPath.startsWith(p.endsWith("/") ? p : `${p}/`));
 }
 
+/**
+ * true cuando el hook lo corre una medición (`scripts/hooks-timing.mjs` pone `HARNESS_PROBE=1`),
+ * no un turno del agente. Un hook medido hace todo lo que hace siempre MENOS dejar estado de
+ * sesión: un marcador fabricado por la medición frenaba una edición legítima en la ventana en
+ * que existía, antes de que la medición lo restaurara (2026-11-09).
+ */
+export const esSonda = () => process.env.HARNESS_PROBE === "1";
+
 /** Marca que hay código editado sin gate verde (lo lee el hook Stop). */
 export function markGateDirty(config) {
   const marker = config?.gate?.marker;
-  if (!marker) return;
+  if (!marker || esSonda()) return;
   const abs = rutaDeEstado(marker);
   try {
     fs.mkdirSync(path.dirname(abs), { recursive: true });
@@ -448,11 +491,41 @@ export function parseHookCommand(comando) {
   if (!limpio) return null;
 
   const conNode = /(?:^|\s)node\s+(?:--\S+\s+)*(\S+)/.exec(limpio);
+  // Los ARGUMENTOS viajan: `node x.mjs hook edit` corrido como `node x.mjs` es otro programa
+  // (imprime su ayuda y sale 1), y la medición de latencia lo reportaba ROTO mientras el hook real
+  // andaba. Salen del comando ORIGINAL (`argumentosDeHook`), no de `limpio`: ahí ya no hay comillas.
+  // `etiqueta` sigue siendo el archivo: es la clave con la que el mapa y el panel lo ubican.
   // Con `node` el archivo es del repo y se le puede exigir que parsee.
-  if (conNode) return { file: conNode[1], tipo: "script", etiqueta: conNode[1] };
+  if (conNode) return { file: conNode[1], args: argumentosDeHook(comando, 1), tipo: "script", etiqueta: conNode[1] };
 
   // Sin `node`: un ejecutable. De un binario externo sólo se puede afirmar que EXISTE.
-  return { file: limpio.split(/\s+/)[0], tipo: "ejecutable", etiqueta: limpio.split(/\s+/)[0] };
+  const binario = limpio.split(/\s+/)[0];
+  return { file: binario, args: argumentosDeHook(comando, 0), tipo: "ejecutable", etiqueta: binario };
+}
+
+/**
+ * Los argumentos de un hook como los vería el proceso: respetando comillas, con
+ * `$CLAUDE_PROJECT_DIR` resuelto a la raíz (borrarlo dejaba `--root` sin valor) y cortando en el
+ * primer operador de shell (`|`, `||`, `&&`, `;`, `>`, `2>`…): una redirección no es argv, y
+ * pasársela al script lo hacía medir ROTO en falso si valida sus argumentos.
+ * `saltar` = cuántos tokens después de `node [--flags]` (o del binario) son el programa.
+ */
+function argumentosDeHook(comando, saltar) {
+  const texto = String(comando ?? "").replace(/\$\{?CLAUDE_PROJECT_DIR\}?/g, REPO_ROOT.split(path.sep).join("/"));
+  const tokens = [];
+  for (const m of texto.matchAll(/"([^"]*)"|'([^']*)'|(\d?>{1,2}|\|\|?|&&|;)|(\S+)/g)) {
+    if (m[3]) break; // operador de shell: lo que sigue no es del hook
+    // Un token puede mezclar comillas y texto (`"$CLAUDE_PROJECT_DIR"/x.mjs`): se juntan.
+    const pegado = m.index > 0 && !/\s/.test(texto[m.index - 1]) && tokens.length;
+    const valor = m[1] ?? m[2] ?? m[4];
+    if (pegado) tokens[tokens.length - 1] += valor;
+    else tokens.push(valor);
+  }
+  let i = tokens.findIndex((t) => t === "node");
+  if (i === -1) return tokens.slice(1);
+  i += 1;
+  while (tokens[i]?.startsWith("--")) i += 1;
+  return tokens.slice(i + saltar);
 }
 
 /**
@@ -473,6 +546,19 @@ export function resolverEjecutable(cmd) {
     }
   }
   return cmd; // que falle con su propio mensaje: adivinar acá sería peor
+}
+
+/**
+ * `[ejecutable, args, opciones]` listos para `spawn`/`spawnSync` sin `shell: true`. Resolver la ruta
+ * no alcanza para un lote (`npm.cmd`): desde CVE-2024-27980 Node no lo ejecuta sin shell (EINVAL).
+ * Se pasa por `cmd.exe` con cada argumento entrecomillado por nosotros, para que `&` o `|` del
+ * config sigan siendo texto. */
+export function prepararLanzamiento(argv, opciones = {}) {
+  const exe = resolverEjecutable(argv[0]);
+  if (process.platform !== "win32" || !/\.(cmd|bat)$/i.test(exe)) return [exe, argv.slice(1), opciones];
+  const citar = (a) => `"${String(a).replace(/(\\*)"/g, '$1$1\\"')}"`;
+  const linea = [exe, ...argv.slice(1)].map(citar).join(" ");
+  return [process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", `"${linea}"`], { ...opciones, windowsVerbatimArguments: true }];
 }
 
 /**
@@ -515,6 +601,26 @@ export function dentroDelAlcance(rel, entradas) {
 }
 
 /**
+ * Text that is never a work-item reference, in any tracker: standard names a commit message
+ * mentions. `tracker.issuePattern` must match none of them (self-test). A pattern derived sample
+ * cannot catch a pattern that matches too much — it matches its own sample too — so the
+ * counter-examples are the proof that it does not bite where it should not. `tracker.issueNonExamples`
+ * adds the team's own (a product code that looks like `ABC-12`).
+ */
+export const DEFAULT_ISSUE_NON_EXAMPLES = ["UTF-8", "ISO-8601", "SHA-256", "HTTP-2", "TLS-1", "x86-64", "color #fff", "#!/bin/sh"];
+
+/** Where the gate leaves `gate.verdict` events for the status ledger (`status.events.journal`). */
+export const DEFAULT_STATUS_JOURNAL = ".git/harness-status-journal.jsonl";
+
+/** Local time with its offset: the ledger is read by people in a timezone, not in UTC. */
+export function isoLocal(d = new Date()) {
+  const pad = (n) => String(Math.abs(n)).padStart(2, "0");
+  const off = -d.getTimezoneOffset();
+  const sign = off >= 0 ? "+" : "-";
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${sign}${pad(Math.trunc(off / 60))}:${pad(off % 60)}`;
+}
+
+/**
  * Dónde vive un archivo de estado declarado como `.git/<algo>`. En un worktree, `.git` no es un
  * directorio sino un ARCHIVO que dice `gitdir: <ruta>`: escribir en `.git/x` reventaba con
  * EEXIST y el freno quedaba inerte. Se resuelve leyendo ese archivo, sin lanzar git — los hooks
@@ -524,6 +630,12 @@ export function rutaDeEstado(rel) {
   const abs = path.join(REPO_ROOT, rel);
   const norm = String(rel).split("\\").join("/");
   if (!norm.startsWith(".git/")) return abs;
+  // `HARNESS_STATE_DIR`: el estado de sesión (`.git/…`) vive en otro directorio. Lo usa el
+  // self-test para fabricar y leer marcadores SIN tocar los de la sesión real: contra los reales,
+  // el hook `ask-first` de cualquier prompt concurrente —de esta sesión o de otra— los borraba en
+  // medio de un caso y el self-test salía rojo sin que nada estuviera roto (2026-11-09).
+  const aparte = process.env.HARNESS_STATE_DIR;
+  if (aparte) return path.join(aparte, norm.slice(".git/".length));
   try {
     const punto = path.join(REPO_ROOT, ".git");
     if (!fs.statSync(punto).isFile()) return abs;
@@ -549,4 +661,32 @@ export function tareaActiva(config) {
   } catch {
     return null;
   }
+}
+
+/**
+ * Where the task's own to-do list lives (`task.todoFile`, `{item}` replaced), or null when the
+ * config declares none. The item is slugged because it is whatever the tracker calls it (`#12`,
+ * `PROJ-7`, `no-issue`) and a path cannot carry `#` or spaces safely on every OS.
+ *
+ * Shared by the hook (the list is always inside the scope: planning is part of the task) and by
+ * `scripts/task.mjs` (the list must exist and be closed to call the task done). Two copies of
+ * this path would let the hook allow a file the verification then looks for somewhere else.
+ */
+export function rutaDeTodo(config, item) {
+  const plantilla = config?.task?.todoFile;
+  if (!plantilla || !item) return null;
+  const slug = String(item).toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "task";
+  return String(plantilla).split("{item}").join(slug).split("\\").join("/");
+}
+
+/**
+ * The test files the active task froze (`task.mjs lock`), as a set of repo-relative paths. A
+ * locked test is the definition of done the code has to meet: editing it to go green turns the
+ * test into a mirror of the code. Empty set when there is no lock or it has the wrong shape
+ * (broken state lets the human through, P5).
+ */
+export function pruebasBloqueadas(tarea) {
+  const archivos = tarea?.lock?.files;
+  if (!archivos || typeof archivos !== "object" || Array.isArray(archivos)) return new Set();
+  return new Set(Object.keys(archivos));
 }

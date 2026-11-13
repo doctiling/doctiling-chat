@@ -18,6 +18,12 @@ export default tseslint.config(
     },
   },
   {
+    // Generic agent-harness file, byte-identical to upstream (harness drift fails on any local
+    // edit): its comma-expression statements are upstream's style, not this repo's to fix.
+    files: ['scripts/library.mjs'],
+    rules: { '@typescript-eslint/no-unused-expressions': 'off' },
+  },
+  {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
     rules: {
       'no-restricted-imports': [
