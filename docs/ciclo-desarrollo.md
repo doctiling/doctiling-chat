@@ -92,8 +92,8 @@ alguien saltea saltándose los hooks (que además está en `bash.deny`).
 
 | Práctica | Qué se verifica | Qué NO | Fuga |
 |---|---|---|---|
-| `testFirst` | el commit que cambia comportamiento trae también un archivo de prueba (`testPattern`) | que la prueba se escribiera **antes**, ni que falle sin el cambio | `no-test: <motivo>` |
-| `smallBatch` | archivos y líneas del commit bajo el límite del equipo (`maxFiles`, `maxLines`) | que el lote tenga sentido propio | `big-batch: <motivo>` |
+| `testFirst` | el commit que cambia comportamiento trae también un archivo de prueba (`testPattern`), o la tarea activa tiene pruebas congeladas (`task.mjs lock`) que ya están en la historia: el ciclo rojo → `lock` → verde pone la prueba en el commit anterior | que la prueba se escribiera **antes**, ni que falle sin el cambio | `no-test: <motivo>` |
+| `smallBatch` | archivos y líneas del commit bajo el límite del equipo (`maxFiles`, `maxLines`); el índice regenerado de la biblioteca (`library.catalog`, `library.appendix`) no cuenta, ni acá ni en `testFirst` | que el lote tenga sentido propio | `big-batch: <motivo>` |
 | `refactorSeparate` | un commit que se declara `refactor:` no cambia pruebas | que el refactor sea de verdad un refactor | `mixed-refactor: <motivo>` |
 | `pairing` | el commit deja rastro de con quién se hizo (`Co-authored-by:`) | que la sesión de a dos haya existido | `solo: <motivo>` |
 
@@ -104,10 +104,11 @@ entera), ritmo sostenible, metáfora, y el estándar de código más allá de lo
 ### `testFirst` cuando el repo no tiene una carpeta `tests/`
 
 `testPattern` es un regex, no una carpeta. En **este** repo la prueba de un freno es su caso del
-self-test (P2), así que el patrón nombra ese archivo:
+self-test (P2), y la de un subagente es su caso de evaluación con IA (`aiEval`), así que el patrón
+nombra los dos:
 
 ```json
-"testPattern": "(^|/)(__tests__|tests?)/|\\.(test|spec)\\.[cm]?[jt]sx?$|^scripts/harness-(selftest|bench)\\.mjs$"
+"testPattern": "(^|/)(__tests__|tests?)/|\\.(test|spec)\\.[cm]?[jt]sx?$|^scripts/harness-(selftest|bench)\\.mjs$|^\\.claude/evals/"
 ```
 
 Ese es el punto de la clave: la práctica es «el cambio entra con su prueba», y qué cuenta como
@@ -119,6 +120,12 @@ Una práctica encendida sin cicatriz detrás se apaga en una semana y se lleva p
 servían (P14). Por eso `pairing` viene **apagado** en este repo —con un agente y una persona, la
 fuga sería la regla— y su mecanismo se prueba igual con un cebo del self-test: el freno existe y
 muerde el día que alguien lo encienda.
+
+### Varias ramas a la vez
+
+Una rama por tarea, y si hay varios agentes trabajando en paralelo, **una carpeta por rama**: un
+worktree cada uno, fuera de la raíz del repo ([worktrees.md](worktrees.md)). El patrón de rama y la
+edad máxima se miden igual; lo que cambia es que ninguna tarea comparte archivos de trabajo con otra.
 
 ---
 
