@@ -83,4 +83,22 @@ describe('public chat mode — human check notice', () => {
     await screen.findByRole('heading', { name: 'Tech Day' });
     expect(screen.getByText(/protegido por reCAPTCHA/i)).toBeInTheDocument();
   });
+
+  // doctiling-web spec 076 (FR-024, T043): an instance that keeps visitor questions says so first.
+  it('[076 TS-043] tells the visitor, before the first question, that questions are kept and for how long', async () => {
+    mockFetch([{ match: on('GET', BASE), respond: () => json({ name: 'Tech Day', contentNotice: { retentionDays: 7 } }) }]);
+    renderPublic();
+    const notice = await screen.findByTestId('public-retention-notice');
+    expect(notice).toHaveTextContent(/7 días/);
+    expect(screen.queryByText(/solo en este navegador/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  it('[076 TS-042] without retention nothing changes: no notice, history only in the browser', async () => {
+    mockFetch([{ match: on('GET', BASE), respond: () => json({ name: 'Tech Day' }) }]);
+    renderPublic();
+    await screen.findByTestId('read-only-badge');
+    expect(screen.queryByTestId('public-retention-notice')).not.toBeInTheDocument();
+    expect(screen.getByText(/solo en este navegador/i)).toBeInTheDocument();
+  });
 });

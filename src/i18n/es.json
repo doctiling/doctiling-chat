@@ -349,6 +349,7 @@
     "unavailable": {
       "title": "Este chat no está disponible",
       "body": "El enlace se apagó o cambió. Pide el enlace actualizado a quien te lo compartió."
-    }
+    },
+    "retentionNotice": "Este chat guarda el texto de tus preguntas durante {days} días para mejorar sus respuestas. No guarda quién preguntó. Tu conversación se queda en este navegador."
   }
 }

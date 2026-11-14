@@ -349,6 +349,7 @@
     "unavailable": {
       "title": "This chat is not available",
       "body": "The link was turned off or changed. Ask whoever shared it for the current link."
-    }
+    },
+    "retentionNotice": "This chat keeps the text of your questions for {days} days to improve its answers. It does not keep who asked. Your conversation itself stays in this browser."
   }
 }
