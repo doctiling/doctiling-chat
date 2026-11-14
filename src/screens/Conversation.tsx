@@ -31,13 +31,15 @@ type Props = {
   kbName?: string;
   /** Desktop: the documents list is open in the side panel (route /kb/:id/docs); the header toggle flips it. */
   docsOpen?: boolean;
+  /** Public mode (web spec 076): the instance keeps visitor questions this many days; 0 = it does not. */
+  retentionDays?: number;
 };
 
 const uid = () => `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 // Same state machine as web's useKbAgent, without Next: one run at a time per
 // screen (ref guard), AbortController to stop, no automatic reconnection.
-export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
+export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionDays = 0 }: Props) {
   const { t, language } = useLanguage();
   const { api, paths, publicMode } = useChat();
   const { push } = useToast();
@@ -286,6 +288,11 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
         </IconButton>
       </header>
       <OfflineBanner onRetry={() => void load()} />
+      {publicMode && retentionDays > 0 && (
+        <p role="note" data-testid="public-retention-notice" className="border-b border-border bg-muted/50 px-4 py-2 text-center text-xs text-muted-foreground">
+          {t('publicChat.retentionNotice', { days: retentionDays })}
+        </p>
+      )}
       <div className="scroll-area" ref={listRef}>
         <div className="mx-auto w-full md:max-w-[760px]">
         {!loaded && (
@@ -325,7 +332,11 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false }: Props) {
         onStop={stop}
         running={running}
         disabled={!loaded || loadError || !!pending}
-        hint={publicMode ? `${t('conversation.hint')} ${t('publicChat.historyHint')} ${t('publicChat.recaptchaNotice')}` : `${t('conversation.hint')} ${t('conversation.mentionHint')}`}
+        hint={
+          publicMode
+            ? `${t('conversation.hint')} ${retentionDays > 0 ? '' : `${t('publicChat.historyHint')} `}${t('publicChat.recaptchaNotice')}`
+            : `${t('conversation.hint')} ${t('conversation.mentionHint')}`
+        }
         placeholder={readOnly ? t('conversation.placeholderReadOnly') : undefined}
         prefill={prefill}
         documents={documents}

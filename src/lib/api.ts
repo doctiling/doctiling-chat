@@ -90,6 +90,8 @@ export type KnowledgeBaseItem = {
   updatedAt: number;
   hasPending: boolean;
   isRunning: boolean;
+  /** Public mode only (web spec 076): the instance keeps visitor questions for this many days. */
+  contentNotice?: { retentionDays: number };
 };
 
 export type Activity = { toolName: string; labelKey: string; target?: string };

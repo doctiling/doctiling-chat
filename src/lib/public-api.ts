@@ -109,7 +109,7 @@ export function createPublicChatApi(config: PublicChatApiConfig): ChatApi {
     timezone: notForVisitors,
     setTimezone: notForVisitors,
     knowledgeBases: async () => {
-      const { name } = (await (await call('')).json()) as { name: string };
+      const { name, contentNotice } = (await (await call('')).json()) as { name: string; contentNotice?: { retentionDays: number } };
       const item: KnowledgeBaseItem = {
         id: config.slug,
         name,
@@ -119,6 +119,7 @@ export function createPublicChatApi(config: PublicChatApiConfig): ChatApi {
         updatedAt: Date.now(),
         hasPending: false,
         isRunning: false,
+        ...(contentNotice && contentNotice.retentionDays > 0 ? { contentNotice } : {}),
       };
       return { items: [item] };
     },

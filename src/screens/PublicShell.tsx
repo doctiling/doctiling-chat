@@ -14,14 +14,14 @@ export function PublicShell({ basePath, slug }: { basePath: string; slug: string
   const { t } = useLanguage();
   const desktop = useIsDesktop();
   const route = useRoute(basePath);
-  const [state, setState] = React.useState<{ kind: 'loading' } | { kind: 'ready'; name: string } | { kind: 'unavailable' }>({ kind: 'loading' });
+  const [state, setState] = React.useState<{ kind: 'loading' } | { kind: 'ready'; name: string; retentionDays: number } | { kind: 'unavailable' }>({ kind: 'loading' });
 
   React.useEffect(() => {
     let cancelled = false;
     api
       .knowledgeBases()
       .then(({ items }) => {
-        if (!cancelled) setState({ kind: 'ready', name: items[0]?.name ?? '' });
+        if (!cancelled) setState({ kind: 'ready', name: items[0]?.name ?? '', retentionDays: items[0]?.contentNotice?.retentionDays ?? 0 });
       })
       .catch((e) => {
         if (!cancelled) setState(e instanceof ApiError && e.code === 'network' ? { kind: 'loading' } : { kind: 'unavailable' });
@@ -52,7 +52,7 @@ export function PublicShell({ basePath, slug }: { basePath: string; slug: string
   }
 
   const docId = route.name === 'conversation' ? route.docId : undefined;
-  const conversation = <Conversation key={slug} kbId={slug} kbName={state.name} docId={docId} />;
+  const conversation = <Conversation key={slug} kbId={slug} kbName={state.name} docId={docId} retentionDays={state.retentionDays} />;
   if (!desktop) return conversation;
   return (
     <div className="desktop-shell" data-testid="public-shell">
