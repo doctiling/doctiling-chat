@@ -2,6 +2,12 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.12.0 — aviso de retención en el chat público (doctiling-web ≥ 0.59.0)
+
+- Modo público: si la instancia guarda el texto de las preguntas de los visitantes (`contentNotice` en la
+  información del chat), la conversación lo dice antes de la primera pregunta y cuántos días se guarda, y deja de
+  decir que el historial vive solo en el navegador. Sin ese campo no cambia nada.
+
 ## 0.11.1 — voz natural, citas que no se leen en voz alta, aviso anti-bots en el pie (doctiling-web ≥ 0.52.2)
 
 - Leer en voz alta elige la voz más natural del dispositivo para el idioma (misma elección que el studio) en vez de
