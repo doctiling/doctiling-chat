@@ -50,7 +50,7 @@ describe('citedDocumentIds', () => {
 describe('entity citations', () => {
   const href = (id: string) => `/d/${id}`;
   it('links doc:ID#Entity "Title" to the document, labelled with the title and the entity', () => {
-    expect(linkifyDocCitations('Ver [1] doc:kb-a1#Prototipo "Grafo".', href)).toBe('Ver [1] [Grafo › Prototipo](/d/kb-a1).');
+    expect(linkifyDocCitations('Ver [1] doc:kb-a1#Prototipo "Grafo".', href)).toBe('Ver [Grafo › Prototipo](/d/kb-a1).');
   });
   it('takes an entity name with spaces and without a title', () => {
     expect(linkifyDocCitations('doc:kb-a1#Vibe checks]', href, { fallbackLabel: 'documento' })).toBe('[documento › Vibe checks](/d/kb-a1)]');
@@ -65,7 +65,7 @@ describe('block citations', () => {
   it('TS-1076: doc:ID#block-N "Title" reads as the document and the block, and opens the document', () => {
     const labels = { blockLabel: (n: number) => `bloque ${n}` };
     expect(linkifyDocCitations('Plazo de 30 días [1] doc:kb1-g7#block-3 "Guía".', hrefFor, labels)).toBe(
-      'Plazo de 30 días [1] [Guía › bloque 3](/es/chat/kb/kb1/doc/kb1-g7).',
+      'Plazo de 30 días [Guía › bloque 3](/es/chat/kb/kb1/doc/kb1-g7).',
     );
   });
 
@@ -73,5 +73,22 @@ describe('block citations', () => {
     expect(linkifyDocCitations('doc:kb1-g1#Cliente "Mapa"', hrefFor, { blockLabel: (n) => `bloque ${n}` })).toBe(
       '[Mapa › Cliente](/es/chat/kb/kb1/doc/kb1-g1)',
     );
+  });
+});
+
+describe('real titles and residue (doctiling-web spec 082 US5)', () => {
+  it('the document’s real title wins over the one the model wrote', () => {
+    const titleFor = (id: string) => (id === 'kb1-r7' ? 'Procedimiento de Reclamaciones' : undefined);
+    expect(linkifyDocCitations('Ver doc:kb1-r7 "Manual de Reclamaciones".', hrefFor, { titleFor })).toBe('Ver [Procedimiento de Reclamaciones](/es/chat/kb/kb1/doc/kb1-r7).');
+    expect(linkifyDocCitations('Ver "Manual" (doc:kb1-r7).', hrefFor, { titleFor })).toBe('Ver [Procedimiento de Reclamaciones](/es/chat/kb/kb1/doc/kb1-r7).');
+  });
+
+  it('drops footnote numbers and raw locators around a citation; text without links is untouched', () => {
+    expect(linkifyDocCitations('Dato [2] doc:kb1-m6 "Manual" › block-5 y #block-6.', hrefFor)).toBe('Dato [Manual](/es/chat/kb/kb1/doc/kb1-m6) y.');
+    expect(linkifyDocCitations('El bloque #block-6 sin citas.', hrefFor)).toBe('El bloque #block-6 sin citas.');
+  });
+
+  it('a titled citation counts as cited', () => {
+    expect(citedDocumentIds('Ver "Alfa" (doc:kb1-a1).')).toEqual(['kb1-a1']);
   });
 });

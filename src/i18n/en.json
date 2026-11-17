@@ -39,6 +39,8 @@
   },
   "conversation": {
     "placeholder": "Ask this knowledge base…",
+    "sources": "Sources",
+    "consulted": "Consulted ({count})",
     "documentLink": "document",
     "send": "Send",
     "stop": "Stop",

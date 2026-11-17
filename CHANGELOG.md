@@ -2,6 +2,13 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.13.0 — citas y fuentes como en el studio (doctiling-web spec 082 US5, ≥ 0.64.0)
+
+- Las citas muestran siempre el título real del documento, nunca el que escribió el modelo, y sin restos como
+  «[1]», «› block-5» o «#block-6».
+- Bajo cada respuesta aparecen las fuentes que cita; los demás documentos que consultó quedan plegados en
+  «Consultados». Si la respuesta no cita nada, se muestran todos los documentos leídos.
+
 ## 0.12.0 — aviso de retención en el chat público (doctiling-web ≥ 0.59.0)
 
 - Modo público: si la instancia guarda el texto de las preguntas de los visitantes (`contentNotice` en la

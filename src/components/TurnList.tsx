@@ -4,8 +4,8 @@ import { ListenControls } from './ListenControls';
 import { Markdown } from './Markdown';
 import { useLanguage } from '../i18n/use-language';
 import { groupDocumentReads } from '../lib/activity';
-import type { Activity, Turn } from '../lib/api';
-import { linkifyDocCitations } from '../lib/citations';
+import type { Activity, ActivitySource, Turn } from '../lib/api';
+import { citedDocumentIds, linkifyDocCitations } from '../lib/citations';
 import { splitFollowups } from '../lib/followups';
 import { speakableText } from '../lib/speakable';
 import { useSpeech } from '../lib/speech';
@@ -28,20 +28,48 @@ type Props = {
   onPickFollowup?: (q: string) => void;
 };
 
+/** The documents a turn read, once each, in the order read. */
+export function turnSources(activity: Activity[] | undefined): ActivitySource[] {
+  const byId = new Map<string, ActivitySource>();
+  for (const step of activity ?? []) for (const src of step.sources ?? []) if (!byId.has(src.id)) byId.set(src.id, src);
+  return [...byId.values()];
+}
+
+/** doctiling-web spec 082 US5 (FR-014): what the answer cites, and the rest it only read. No citation → all are sources. */
+export function splitSources(text: string, sources: ActivitySource[]): { cited: ActivitySource[]; consulted: ActivitySource[] } {
+  const ids = new Set(citedDocumentIds(text));
+  const cited = sources.filter((s) => ids.has(s.id));
+  if (cited.length === 0) return { cited: sources, consulted: [] };
+  return { cited, consulted: sources.filter((s) => !ids.has(s.id)) };
+}
+
+function SourceChip({ src, hrefFor, onOpenDoc }: { src: ActivitySource; hrefFor: Props['hrefFor']; onOpenDoc: Props['onOpenDoc'] }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpenDoc(hrefFor(src.id))}
+      className="max-w-[16rem] truncate rounded-full border border-border bg-background px-3 py-1 text-[12px] text-foreground"
+    >
+      {src.title}
+    </button>
+  );
+}
+
 function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; hrefFor: Props['hrefFor']; onOpenDoc: Props['onOpenDoc']; onPickFollowup?: (q: string) => void }) {
   const { t } = useLanguage();
   const isUser = turn.role === 'user';
   const split = React.useMemo(() => (isUser ? { text: turn.content, followups: [] } : splitFollowups(turn.content)), [isUser, turn.content]);
-  const rendered = React.useMemo(
-    () =>
-      isUser
-        ? split.text
-        : linkifyDocCitations(split.text, hrefFor, {
-            fallbackLabel: t('conversation.documentLink'),
-            blockLabel: (n) => t('conversation.blockLink', { n }),
-          }),
-    [isUser, split.text, hrefFor, t],
-  );
+  const sources = React.useMemo(() => (isUser ? [] : turnSources(turn.activity)), [isUser, turn.activity]);
+  const rendered = React.useMemo(() => {
+    if (isUser) return split.text;
+    const titles = new Map(sources.map((s) => [s.id, s.title]));
+    return linkifyDocCitations(split.text, hrefFor, {
+      titleFor: (id) => titles.get(id),
+      fallbackLabel: t('conversation.documentLink'),
+      blockLabel: (n) => t('conversation.blockLink', { n }),
+    });
+  }, [isUser, split.text, hrefFor, t, sources]);
+  const shown = React.useMemo(() => splitSources(split.text, sources), [split.text, sources]);
   const speakable = React.useMemo(() => (isUser ? '' : speakableText(split.text)), [isUser, split.text]);
   return (
     <article className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`} data-testid="turn" data-role={turn.role}>
@@ -62,6 +90,24 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
       ) : (
         <div className="w-full max-w-full rounded-2xl rounded-bl-md bg-card px-4 py-3 text-card-foreground">
           <Markdown markdown={rendered} onInternalLink={onOpenDoc} />
+        </div>
+      )}
+      {!isUser && shown.cited.length > 0 && (
+        <div className="flex w-full flex-wrap items-center gap-1.5 px-1" data-testid="turn-sources">
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{t('conversation.sources')}</span>
+          {shown.cited.map((src) => (
+            <SourceChip key={src.id} src={src} hrefFor={hrefFor} onOpenDoc={onOpenDoc} />
+          ))}
+          {shown.consulted.length > 0 && (
+            <details className="w-full text-[12px] text-muted-foreground" data-testid="turn-consulted">
+              <summary className="min-h-[32px] cursor-pointer select-none py-1">{t('conversation.consulted', { count: shown.consulted.length })}</summary>
+              <div className="flex flex-wrap gap-1.5">
+                {shown.consulted.map((src) => (
+                  <SourceChip key={src.id} src={src} hrefFor={hrefFor} onOpenDoc={onOpenDoc} />
+                ))}
+              </div>
+            </details>
+          )}
         </div>
       )}
       {!isUser && <ListenControls id={turn.id} text={speakable} />}
