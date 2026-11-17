@@ -2,6 +2,15 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.14.0 — el chat dice la causa de cada error (doctiling-web spec 085, ≥ 0.66.0)
+
+- Si el servidor rechaza un envío por cuota, crédito de IA o demasiadas solicitudes, el aviso dice esa causa en
+  lugar de «No se pudo enviar». Una respuesta sin código (una página de la plataforma) se interpreta por su estado.
+- Si la conexión se corta a mitad de una respuesta, la respuesta queda marcada como incompleta y se avisa.
+- Al convertir, un archivo de más de 25 MB o de un tipo no admitido se rechaza antes de subirlo, con el límite en el
+  mensaje. Nuevas causas: archivo con contraseña, archivo dañado, servicio no disponible.
+- El chat público sin conexión muestra «Reintentar» en vez de quedarse en «Cargando…».
+
 ## 0.13.0 — citas y fuentes como en el studio (doctiling-web spec 082 US5, ≥ 0.64.0)
 
 - Las citas muestran siempre el título real del documento, nunca el que escribió el modelo, y sin restos como
