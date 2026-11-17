@@ -37,9 +37,11 @@ export function linkifyDocCitations(
     fences.push(fence);
     return `\u0000${fences.length - 1}\u0000`;
   });
-  const label = (id: string, title?: string) => title ?? labels.titleFor?.(id) ?? labels.fallbackLabel ?? id;
+  // doctiling-web spec 082 US5 (agent spec RQA-02/08): the document's real title wins over the
+  // one the model wrote — never an invented title, the file name or a section heading.
+  const label = (id: string, title?: string) => labels.titleFor?.(id) ?? title ?? labels.fallbackLabel ?? id;
   const linked = withoutFences
-    .replace(TITLED_CITATION, (_m, title: string, id: string) => `[${title}](${hrefFor(id)})`)
+    .replace(TITLED_CITATION, (_m, title: string, id: string) => `[${label(id, title)}](${hrefFor(id)})`)
     .replace(CITATION, (m, a?: string, b?: string, c?: string, entity?: string, title?: string) => {
       const id = a ?? b ?? c ?? '';
       if (!ID_LIKE.test(id)) return m.replace(STRAY, '').replace(/^\[\[(.*)\]\]$|^\[(.*)\]$/, '$1$2');
@@ -49,13 +51,41 @@ export function linkifyDocCitations(
       const text = shown ? `${label(id, title)} › ${shown}` : label(id, title);
       return `[${text}](${hrefFor(id)})`;
     });
-  return linked.replace(/\u0000(\d+)\u0000/g, (_m, i: string) => fences[Number(i)] ?? '');
+  return tidyCitationResidue(linked).replace(/\u0000(\d+)\u0000/g, (_m, i: string) => fences[Number(i)] ?? '');
+}
+
+const MD_LINK = /\[[^\]\n]*\]\([^)\s]*\)/g;
+// What a model leaves around a citation once it is a link (agent spec D-03): a footnote number
+// before it ("[1] [Título](…)") and raw locators ("› block-5", "#block-6", "fila-1 · 2]").
+// Only the text between links is touched; a reply without links is left as written.
+function tidyCitationResidue(markdown: string): string {
+  const links = [...markdown.matchAll(MD_LINK)];
+  if (links.length === 0) return markdown;
+  const clean = (text: string, afterLink: boolean, beforeLink: boolean) => {
+    let out = text.replace(/\s*(?:›\s*)?#(?:block|fila|row)-\d+\b/gi, '').replace(/\s*›\s*(?:block|fila|row)-\d+\b/gi, '');
+    if (afterLink) out = out.replace(/^\s*(?:block|fila|row)-\d+(?:\s*·\s*\d+)?\]?/i, '');
+    if (beforeLink) out = out.replace(/\[\d{1,3}\]\s*$/, '');
+    return out;
+  };
+  const parts: string[] = [];
+  let last = 0;
+  links.forEach((m, i) => {
+    parts.push(clean(markdown.slice(last, m.index), i > 0, true), m[0]);
+    last = (m.index ?? 0) + m[0].length;
+  });
+  parts.push(clean(markdown.slice(last), true, false));
+  return parts.join('');
 }
 
 export function citedDocumentIds(markdown: string): string[] {
   const ids = new Set<string>();
-  for (const m of markdown.replace(FENCE, '').matchAll(CITATION)) {
+  const text = markdown.replace(FENCE, '');
+  for (const m of text.matchAll(CITATION)) {
     const id = m[1] ?? m[2] ?? m[3] ?? '';
+    if (ID_LIKE.test(id)) ids.add(id);
+  }
+  for (const m of text.matchAll(TITLED_CITATION)) {
+    const id = m[2] ?? '';
     if (ID_LIKE.test(id)) ids.add(id);
   }
   return [...ids];

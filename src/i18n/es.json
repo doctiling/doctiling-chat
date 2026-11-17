@@ -39,6 +39,8 @@
   },
   "conversation": {
     "placeholder": "Pregunta a esta base…",
+    "sources": "Fuentes",
+    "consulted": "Consultados ({count})",
     "documentLink": "documento",
     "send": "Enviar",
     "stop": "Detener",

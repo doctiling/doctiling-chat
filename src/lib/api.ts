@@ -94,7 +94,10 @@ export type KnowledgeBaseItem = {
   contentNotice?: { retentionDays: number };
 };
 
-export type Activity = { toolName: string; labelKey: string; target?: string };
+/** A document a step read (the server's `sources`): what the sources row is built from. */
+export type ActivitySource = { id: string; title: string; blockNumber?: number };
+
+export type Activity = { toolName: string; labelKey: string; target?: string; sources?: ActivitySource[] };
 
 /** A document the person pointed the question at with `@` (client-side only: the server keeps `content` = the query). */
 export type TurnReference = { id: string; title: string };
