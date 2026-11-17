@@ -8,12 +8,25 @@ export type ApiErrorBody = { error: string; messageKey?: string };
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
-  constructor(status: number, code: string, message?: string) {
-    super(message ?? `${status} ${code}`);
+  /** The dictionary key the server chose for this cause (spec 085: shown when the chat has it). */
+  readonly messageKey?: string;
+  constructor(status: number, code: string, messageKey?: string) {
+    super(`${status} ${code}`);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
+    this.messageKey = messageKey;
   }
+}
+
+/** Spec 085: a refusal without a JSON code (a platform page, a proxy) still has a cause. */
+export function codeFromStatus(status: number): string {
+  if (status === 402) return 'credit_exceeded';
+  if (status === 413) return 'file_too_large';
+  if (status === 415) return 'unsupported_type';
+  if (status === 429) return 'rate_limited';
+  if (status === 502 || status === 503 || status === 504) return 'unavailable';
+  return 'unknown';
 }
 
 export type ChatApiConfig = {
@@ -111,6 +124,8 @@ export type Turn = {
   createdAt?: string;
   /** Mentions shown as tags under a user turn; never sent back, never persisted here. */
   references?: TurnReference[];
+  /** Spec 085 FR-009: the answer was cut by the connection; shown as such, with a retry. */
+  interrupted?: boolean;
 };
 
 export type Pending = {
@@ -256,7 +271,7 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
       }
       throw new ApiError(404, 'chat_disabled');
     }
-    throw new ApiError(res.status, body?.error ?? 'unknown', body?.messageKey);
+    throw new ApiError(res.status, body?.error ?? codeFromStatus(res.status), body?.messageKey);
   }
 
   async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {

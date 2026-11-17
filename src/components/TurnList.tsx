@@ -92,6 +92,11 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
           <Markdown markdown={rendered} onInternalLink={onOpenDoc} />
         </div>
       )}
+      {!isUser && turn.interrupted && (
+        <p role="status" className="px-1 text-xs text-destructive">
+          {t('conversation.interrupted')}
+        </p>
+      )}
       {!isUser && shown.cited.length > 0 && (
         <div className="flex w-full flex-wrap items-center gap-1.5 px-1" data-testid="turn-sources">
           <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{t('conversation.sources')}</span>

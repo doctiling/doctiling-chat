@@ -91,6 +91,16 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
 
   const silent = (e: unknown) => e instanceof ApiError && (e.status === 401 || e.code === 'chat_disabled');
 
+  // Spec 085 FR-011: the server's own key when the chat has it, else the cause, else «could not send».
+  const causeText = React.useCallback(
+    (e: ApiError) => {
+      if (e.messageKey && (hasKey(language, e.messageKey) || hasKey('en', e.messageKey))) return t(e.messageKey);
+      const key = `conversation.errors.${e.code}`;
+      return hasKey(language, key) || hasKey('en', key) ? t(key) : t('conversation.errors.sendFailed');
+    },
+    [language, t],
+  );
+
   const load = React.useCallback(async () => {
     try {
       const s = await api.session(kbId);
@@ -144,6 +154,7 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
         setPending(null);
       }
       const state: LiveState = { text: '', activity: [], thinking: true };
+      let interrupted = false;
       setLive({ ...state });
       let sawDone = false;
       try {
@@ -202,12 +213,20 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
             if ('query' in body) setTurns((ts) => ts.filter((x) => x.id !== userTurnId));
             setNotice(errorText(e.code));
           } else if (!silent(e)) {
-            push({ message: errorText('sendFailed'), kind: 'error' });
+            push({ message: causeText(e), kind: 'error' });
           }
+        } else if ((e as Error)?.name !== 'AbortError') {
+          // Spec 085 FR-009: the stream broke mid-answer (a TypeError from the reader): say so, keep what arrived.
+          reportNetworkFailure();
+          push({ message: errorText('network'), kind: 'error' });
+          interrupted = true;
         }
       } finally {
         if (state.text || state.activity.length) {
-          setTurns((ts) => [...ts, { id: uid(), role: 'agent', content: state.text, activity: state.activity }]);
+          setTurns((ts) => [
+            ...ts,
+            { id: uid(), role: 'agent', content: state.text, activity: state.activity, ...(interrupted ? { interrupted } : {}) },
+          ]);
         }
         setLive(null);
         setRunning(false);
