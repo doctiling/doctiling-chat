@@ -14,7 +14,11 @@ export function PublicShell({ basePath, slug }: { basePath: string; slug: string
   const { t } = useLanguage();
   const desktop = useIsDesktop();
   const route = useRoute(basePath);
-  const [state, setState] = React.useState<{ kind: 'loading' } | { kind: 'ready'; name: string; retentionDays: number } | { kind: 'unavailable' }>({ kind: 'loading' });
+  const [state, setState] = React.useState<
+    { kind: 'loading' } | { kind: 'ready'; name: string; retentionDays: number } | { kind: 'unavailable' } | { kind: 'offline' }
+  >({ kind: 'loading' });
+  // Bumped by «Reintentar» on the offline page.
+  const [attempt, setAttempt] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -24,12 +28,33 @@ export function PublicShell({ basePath, slug }: { basePath: string; slug: string
         if (!cancelled) setState({ kind: 'ready', name: items[0]?.name ?? '', retentionDays: items[0]?.contentNotice?.retentionDays ?? 0 });
       })
       .catch((e) => {
-        if (!cancelled) setState(e instanceof ApiError && e.code === 'network' ? { kind: 'loading' } : { kind: 'unavailable' });
+        // Spec 085 FR-006: offline is its own state with a retry, not an endless «Cargando…».
+        if (!cancelled) setState(e instanceof ApiError && e.code === 'network' ? { kind: 'offline' } : { kind: 'unavailable' });
       });
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, attempt]);
+
+  if (state.kind === 'offline') {
+    return (
+      <main className="app-shell">
+        <div data-testid="public-offline" role="alert" className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
+          <p className="max-w-md text-muted-foreground">{t('conversation.errors.network')}</p>
+          <button
+            type="button"
+            className="rounded-md border border-border px-4 py-2 text-sm"
+            onClick={() => {
+              setState({ kind: 'loading' });
+              setAttempt((n) => n + 1);
+            }}
+          >
+            {t('offline.retry')}
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (state.kind === 'loading') {
     return (

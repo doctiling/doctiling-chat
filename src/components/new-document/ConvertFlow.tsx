@@ -4,7 +4,7 @@ import { Button } from '@doctiling/ui/atoms/button';
 import { useLanguage } from '../../i18n/use-language';
 import type { ConvertedSheet, DocumentListItem } from '../../lib/api';
 import { useChat } from '../../lib/chat-context';
-import { CONVERT_ACCEPT, MAX_FILES_PER_BATCH, errorCode, errorKey } from '../../lib/new-document';
+import { CONVERT_ACCEPT, MAX_FILES_PER_BATCH, errorCode, errorKey, MAX_UPLOAD_MB, precheckFile } from '../../lib/new-document';
 import { SheetPicker } from './SheetPicker';
 
 type Props = {
@@ -27,7 +27,7 @@ export function ConvertFlow({ kbId, onDone }: Props) {
   const [problems, setProblems] = React.useState<string[]>([]);
   const busy = React.useRef(false);
 
-  const reason = (code: string) => t(errorKey(code));
+  const reason = (code: string) => t(errorKey(code), { mb: MAX_UPLOAD_MB });
 
   const run = async (files: File[]) => {
     if (busy.current || files.length === 0) return;
@@ -40,6 +40,11 @@ export function ConvertFlow({ kbId, onDone }: Props) {
     const created: DocumentListItem[] = [];
     const failed: string[] = [];
     for (const file of files) {
+      const refused = precheckFile(file);
+      if (refused) {
+        failed.push(t('newDocument.convert.failedFile', { name: file.name, reason: reason(refused) }));
+        continue;
+      }
       setProgress(t('newDocument.convert.progress', { name: file.name }));
       try {
         const result = await api.convertDocument(kbId, file);

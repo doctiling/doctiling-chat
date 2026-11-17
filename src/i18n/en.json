@@ -134,7 +134,8 @@
     "listenPause": "Pause reading",
     "listenResume": "Resume reading",
     "listenStop": "Stop reading",
-    "blockLink": "block {n}"
+    "blockLink": "block {n}",
+    "interrupted": "The connection dropped and this answer is incomplete. Send the question again."
   },
   "sourceSheet": {
     "title": "Source",
@@ -314,7 +315,7 @@
     "errors": {
       "forbidden_create": "Only administrators of this base can create or upload documents.",
       "invalid_body": "The request is not valid.",
-      "file_too_large": "The file is larger than the upload limit.",
+      "file_too_large": "The file is over the {mb} MB limit. Compress it or split it.",
       "unsupported_type": "This file type cannot be converted. Use a PDF, a DOCX or a spreadsheet.",
       "empty_extraction": "No content could be found in the file.",
       "extraction_failed": "The file could not be read. It may be damaged.",
@@ -323,7 +324,10 @@
       "credit_exceeded": "Your AI credit is used up. Ask an administrator to raise it.",
       "save_failed": "The document could not be saved.",
       "network": "No connection. Try again when you are back online.",
-      "unknown": "Something went wrong. Try again."
+      "unknown": "Something went wrong. Try again.",
+      "file_encrypted": "The file is password-protected. Remove the password and upload it again.",
+      "file_corrupt": "The file couldn’t be read: it looks damaged. Save or export it again.",
+      "unavailable": "The service isn’t available right now. Try again in a while."
     }
   },
   "indexPrompt": {

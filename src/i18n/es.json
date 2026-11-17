@@ -134,7 +134,8 @@
     "listenPause": "Pausar lectura",
     "listenResume": "Reanudar lectura",
     "listenStop": "Detener lectura",
-    "blockLink": "bloque {n}"
+    "blockLink": "bloque {n}",
+    "interrupted": "Se cortó la conexión y esta respuesta quedó incompleta. Vuelve a enviar la pregunta."
   },
   "sourceSheet": {
     "title": "Fuente",
@@ -314,7 +315,7 @@
     "errors": {
       "forbidden_create": "Solo los administradores de esta base pueden crear o subir documentos.",
       "invalid_body": "La solicitud no es válida.",
-      "file_too_large": "El archivo supera el límite de subida.",
+      "file_too_large": "El archivo supera el límite de {mb} MB. Comprímelo o divídelo.",
       "unsupported_type": "Este tipo de archivo no se puede convertir. Usa un PDF, un DOCX o una hoja de cálculo.",
       "empty_extraction": "No se encontró contenido en el archivo.",
       "extraction_failed": "No se pudo leer el archivo. Puede estar dañado.",
@@ -323,7 +324,10 @@
       "credit_exceeded": "Se agotó tu crédito de IA. Pide a un administrador que lo amplíe.",
       "save_failed": "No se pudo guardar el documento.",
       "network": "Sin conexión. Inténtalo de nuevo cuando vuelvas a estar en línea.",
-      "unknown": "Algo salió mal. Inténtalo de nuevo."
+      "unknown": "Algo salió mal. Inténtalo de nuevo.",
+      "file_encrypted": "El archivo tiene contraseña. Quítala y vuelve a subirlo.",
+      "file_corrupt": "No se pudo leer el archivo: parece dañado. Guárdalo o expórtalo de nuevo.",
+      "unavailable": "El servicio no está disponible en este momento. Inténtalo de nuevo en un rato."
     }
   },
   "indexPrompt": {
