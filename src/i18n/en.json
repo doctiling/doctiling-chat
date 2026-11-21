@@ -126,7 +126,8 @@
       "human_check": "We couldn't verify you are a person. Reload the page and try again.",
       "rate_limited": "You're sending questions too fast. Wait a moment and try again.",
       "daily_cap": "This chat reached its question limit for today. Come back tomorrow.",
-      "unavailable": "This chat is not available right now."
+      "unavailable": "This chat is not available right now.",
+      "changes_closed": "Those changes were already kept or undone."
     },
     "readOnlyBadge": "Read-only",
     "placeholderReadOnly": "Ask this knowledge base (read-only)…",
@@ -136,7 +137,21 @@
     "listenResume": "Resume reading",
     "listenStop": "Stop reading",
     "blockLink": "block {n}",
-    "interrupted": "The connection dropped and this answer is incomplete. Send the question again."
+    "interrupted": "The connection dropped and this answer is incomplete. Send the question again.",
+    "openDocument": "Open: {title}",
+    "openDocumentHint": "The agent knows this document is open: “this table”, “another row” or “this paragraph” refer to it.",
+    "changes": {
+      "summary": "The agent changed {docs}",
+      "keep": "Keep",
+      "keepHint": "Keep the changes of this answer",
+      "undo": "Undo",
+      "undoHint": "Go back to how it was before this answer. What someone changed afterwards is kept.",
+      "kept": "Changes kept",
+      "undone": "Changes undone",
+      "undoneSkipped": "Changes undone. {count} were kept because someone changed them afterwards.",
+      "failed": "Could not finish. Try again.",
+      "lead": "The agent changed"
+    }
   },
   "sourceSheet": {
     "title": "Source",
@@ -149,7 +164,11 @@
       "database": "Table",
       "graph": "Graph"
     },
-    "listen": "Listen to the document"
+    "listen": "Listen to the document",
+    "backToDocuments": "Back to documents",
+    "expand": "Expand the document",
+    "shrink": "Shrink the document",
+    "resize": "Drag to change the document width"
   },
   "settings": {
     "title": "Settings",

@@ -143,6 +143,15 @@ export type SessionAccess = {
   canWrite: boolean;
 };
 
+/** doctiling-web spec 086 extension: what one agent turn changed, to keep or undo it. */
+export type TurnChange = {
+  turnId: string;
+  state: 'open' | 'kept' | 'undone';
+  documents: { id: string; title: string }[];
+};
+
+export type TurnChangeResult = { state: 'kept' | 'undone'; restored: number; skipped: number };
+
 export type SessionView = {
   turns: Turn[];
   actions: unknown[];
@@ -150,6 +159,8 @@ export type SessionView = {
   isRunning: boolean;
   config?: unknown;
   access?: SessionAccess;
+  /** Absent on a server older than the extension: the chat then shows no keep/undo bar. */
+  changes?: TurnChange[];
 };
 
 export type AgentEvent = {
@@ -202,7 +213,9 @@ export type GenerateEvent =
 
 export type IndexResult = { id: string; ok: boolean; reason?: 'forbidden' | 'not_found' | 'index_failed' };
 
-export type AgentBody = { query: string; referencedDocumentIds?: string[] } | { resume: { pendingId: string; approved: boolean } };
+export type AgentBody =
+  | { query: string; referencedDocumentIds?: string[]; /** The document open next to the chat (web spec 086 extension). */ activeDocumentId?: string }
+  | { resume: { pendingId: string; approved: boolean } };
 
 /**
  * spec 068 (doctiling-web): the person's time zone, a studio-wide preference shared with the chat.
@@ -224,6 +237,8 @@ export type ChatApi = {
   documents: (kbId: string) => Promise<{ items: DocumentListItem[] }>;
   /** NDJSON stream; the caller iterates with readNdjson and aborts with the signal. */
   agent: (kbId: string, body: AgentBody, signal: AbortSignal) => Promise<Response>;
+  /** Keep or undo what one agent turn changed (web spec 086 extension). Absent in the public chat. */
+  turnChanges?: (kbId: string, turnId: string, action: 'keep' | 'undo') => Promise<TurnChangeResult>;
   createDocument: (kbId: string, input: NewDocumentInput) => Promise<DocumentListItem>;
   convertDocument: (kbId: string, file: File, signal?: AbortSignal) => Promise<ConvertResult>;
   /** NDJSON stream of GenerateEvent, ending in Saved or Error. */
@@ -294,6 +309,8 @@ export function createChatApi({ apiBase = '', signInHref, onDisabled, navigateTo
     document: (kbId, docId) => apiJson<DocumentView>(`${kb(kbId)}/documents/${encodeURIComponent(docId)}`),
     documents: (kbId) => apiJson<{ items: DocumentListItem[] }>(`${kb(kbId)}/documents`),
     agent: (kbId, body, signal) => apiFetch(`${kb(kbId)}/agent`, { method: 'POST', body: JSON.stringify(body), signal }),
+    turnChanges: (kbId, turnId, action) =>
+      apiJson<TurnChangeResult>(`${kb(kbId)}/session/changes/${encodeURIComponent(turnId)}`, { method: 'POST', body: JSON.stringify({ action }) }),
     createDocument: async (kbId, input) =>
       (await apiJson<{ document: DocumentListItem }>(`${kb(kbId)}/documents`, { method: 'POST', body: JSON.stringify(input) })).document,
     convertDocument: (kbId, file, signal) => {

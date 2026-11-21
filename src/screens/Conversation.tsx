@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ArrowLeft, Files, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, Files, Share2, Trash2 } from 'lucide-react';
 import { Badge } from '@doctiling/ui/atoms/badge';
 import { Button } from '@doctiling/ui/atoms/button';
 import { SimpleTooltip } from '@doctiling/ui/molecules/tooltip';
@@ -11,9 +11,21 @@ import { OfflineBanner } from '../components/OfflineBanner';
 import { Sheet } from '../components/Sheet';
 import { useToast } from '../components/Toast';
 import { TurnList, type LiveState } from '../components/TurnList';
+import { TurnChangeBar } from '../components/TurnChangeBar';
 import { hasKey } from '../i18n';
 import { useLanguage } from '../i18n/use-language';
-import { ApiError, readNdjson, type Activity, type AgentBody, type AgentEvent, type Pending, type SessionAccess, type Turn, type TurnReference } from '../lib/api';
+import {
+  ApiError,
+  readNdjson,
+  type Activity,
+  type AgentBody,
+  type AgentEvent,
+  type Pending,
+  type SessionAccess,
+  type Turn,
+  type TurnChange,
+  type TurnReference,
+} from '../lib/api';
 import { useChat } from '../lib/chat-context';
 import { useDocuments } from '../lib/documents';
 import { appliedSignals, emitLocal } from '../lib/realtime';
@@ -47,6 +59,8 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
   const { items: documents, reload: reloadDocuments } = useDocuments(api, kbId);
   const [turns, setTurns] = React.useState<Turn[]>([]);
   const [access, setAccess] = React.useState<SessionAccess | null>(null);
+  // Web spec 086 extension: what each agent turn changed, keyed by turn id (keep / undo).
+  const [changes, setChanges] = React.useState<Map<string, TurnChange>>(() => new Map());
   // The server persists `content` only; the tags of a question keep showing after the
   // reload that follows a run by remembering them per question text (last one wins).
   const referencesByQuery = React.useRef(new Map<string, TurnReference[]>());
@@ -109,6 +123,7 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
       setPending(s.pending);
       setRunning(s.isRunning);
       setAccess(s.access ?? null);
+      setChanges(new Map((s.changes ?? []).map((c) => [c.turnId, c])));
       setLoadError(false);
     } catch (e) {
       if (e instanceof ApiError && e.code === 'network') reportNetworkFailure();
@@ -257,9 +272,34 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
     }
   }, [api, kbId, push, errorText]);
 
+  // Keep or undo one turn's changes; the session is reloaded either way (another tab may have decided).
+  const decideChanges = React.useCallback(
+    async (change: TurnChange, action: 'keep' | 'undo') => {
+      if (!api.turnChanges) return;
+      try {
+        const result = await api.turnChanges(kbId, change.turnId, action);
+        if (action === 'undo') {
+          for (const d of change.documents) emitLocal(api, { kind: 'doc.changed', kbId, docId: d.id });
+          push({
+            message:
+              result.skipped > 0
+                ? t('conversation.changes.undoneSkipped', { count: result.skipped })
+                : t('conversation.changes.undone'),
+          });
+        }
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 409) push({ message: errorText('changes_closed'), kind: 'error' });
+        else if (!silent(e)) push({ message: t('conversation.changes.failed'), kind: 'error' });
+      }
+      await load();
+    },
+    [api, kbId, push, t, errorText, load],
+  );
+
   const hrefFor = React.useCallback((id: string) => paths.document(kbId, id), [paths, kbId]);
   const openDoc = React.useCallback((href: string) => navigate(href), []);
   const readOnly = access?.canWrite === false;
+  const openTitle = docId && !publicMode ? documents?.find((d) => d.id === docId)?.title : undefined;
   const share = async () => {
     const outcome = await shareLink({
       title: resolvedName ?? t('kb.title'),
@@ -333,7 +373,24 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
           <p className="px-6 py-10 text-center text-sm text-muted-foreground">{t('conversation.empty')}</p>
         )}
         {loaded && !loadError && (
-          <TurnList turns={turns} live={live} hrefFor={hrefFor} onOpenDoc={openDoc} onPickFollowup={(q) => setPrefill({ text: q, nonce: Date.now() })}>
+          <TurnList
+            turns={turns}
+            live={live}
+            hrefFor={hrefFor}
+            onOpenDoc={openDoc}
+            onPickFollowup={(q) => setPrefill({ text: q, nonce: Date.now() })}
+            footerFor={(turn) => {
+              const change = !publicMode && api.turnChanges ? changes.get(turn.id) : undefined;
+              return change ? (
+                <TurnChangeBar
+                  change={change}
+                  disabled={running}
+                  onDecide={(action) => decideChanges(change, action)}
+                  onOpenDocument={(id) => navigate(paths.document(kbId, id))}
+                />
+              ) : null;
+            }}
+          >
             {pending && !running && (
               <ConfirmCard pending={pending} onResolve={(approved) => run({ resume: { pendingId: pending.id, approved } })} />
             )}
@@ -346,8 +403,29 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
         )}
         </div>
       </div>
+      {openTitle && (
+        <div className="mx-auto flex w-full items-center px-4 pt-2 md:max-w-[760px]">
+          <SimpleTooltip label={t('conversation.openDocumentHint')} side="top">
+            <span
+              tabIndex={0}
+              data-testid="open-document-context"
+              className="inline-flex max-w-full items-center gap-1.5 truncate rounded-full border border-border bg-muted/60 px-3 py-1 text-xs text-muted-foreground"
+            >
+              <FileText className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <span className="truncate">{t('conversation.openDocument', { title: openTitle })}</span>
+            </span>
+          </SimpleTooltip>
+        </div>
+      )}
       <Composer
-        onSend={(q, ids) => void run(ids.length ? { query: q, referencedDocumentIds: ids } : { query: q })}
+        onSend={(q, ids) =>
+          void run({
+            query: q,
+            ...(ids.length ? { referencedDocumentIds: ids } : {}),
+            // Web spec 086 extension: the agent knows which document is open next to the chat.
+            ...(docId && !publicMode ? { activeDocumentId: docId } : {}),
+          })
+        }
         onStop={stop}
         running={running}
         disabled={!loaded || loadError || !!pending}
@@ -384,7 +462,12 @@ export function Conversation({ kbId, docId, kbName, docsOpen = false, retentionD
       {desktop && docsOpen && !docId ? (
         <Documents kbId={kbId} variant="panel" onClose={() => navigate(paths.conversation(kbId))} />
       ) : (
-        <SourceSheet kbId={kbId} docId={docId ?? null} onClose={() => navigate(paths.conversation(kbId), { replace: true })} />
+        <SourceSheet
+          kbId={kbId}
+          docId={docId ?? null}
+          onClose={() => navigate(paths.conversation(kbId), { replace: true })}
+          onBack={publicMode ? undefined : () => navigate(paths.documents(kbId))}
+        />
       )}
       </div>
     </main>
