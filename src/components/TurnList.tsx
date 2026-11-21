@@ -71,17 +71,22 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
   }, [isUser, split.text, hrefFor, t, sources]);
   const shown = React.useMemo(() => splitSources(split.text, sources), [split.text, sources]);
   const speakable = React.useMemo(() => (isUser ? '' : speakableText(split.text)), [isUser, split.text]);
+  const steps = React.useMemo(() => (isUser ? [] : groupDocumentReads(turn.activity ?? [])), [isUser, turn.activity]);
   return (
     <article className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`} data-testid="turn" data-role={turn.role}>
       <span className="px-1 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
         {t(isUser ? 'conversation.you' : 'conversation.agent')}
       </span>
-      {!isUser && turn.activity && turn.activity.length > 0 && (
-        <div className="flex flex-col gap-0.5 px-1">
-          {groupDocumentReads(turn.activity).map(({ activity: a }, i) => (
-            <ActivityLine key={i} activity={a} />
-          ))}
-        </div>
+      {!isUser && steps.length > 0 && (
+        // 2026-11-20: like the studio chat, a finished turn folds its steps; the answer reads first.
+        <details className="px-1 text-[12px] text-muted-foreground" data-testid="turn-activity">
+          <summary className="min-h-[32px] cursor-pointer select-none py-1">{t('conversation.steps', { count: steps.length })}</summary>
+          <div className="flex flex-col gap-0.5">
+            {steps.map(({ activity: a }, i) => (
+              <ActivityLine key={i} activity={a} />
+            ))}
+          </div>
+        </details>
       )}
       {isUser ? (
         <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-base leading-relaxed text-primary-foreground">

@@ -41,6 +41,7 @@
     "placeholder": "Ask this knowledge base…",
     "sources": "Sources",
     "consulted": "Consulted ({count})",
+    "steps": "Agent steps ({count})",
     "documentLink": "document",
     "send": "Send",
     "stop": "Stop",
