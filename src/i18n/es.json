@@ -41,6 +41,7 @@
     "placeholder": "Pregunta a esta base…",
     "sources": "Fuentes",
     "consulted": "Consultados ({count})",
+    "steps": "Pasos del agente ({count})",
     "documentLink": "documento",
     "send": "Enviar",
     "stop": "Detener",

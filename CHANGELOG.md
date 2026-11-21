@@ -2,6 +2,11 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.14.1 — los pasos del agente se pliegan, como en el studio
+
+- En una respuesta terminada, los pasos del agente («Buscando…», «Leyendo un documento…») quedan plegados bajo
+  «Pasos del agente (N)»; la respuesta se lee primero. Mientras responde, los pasos siguen a la vista.
+
 ## 0.14.0 — el chat dice la causa de cada error (doctiling-web spec 085, ≥ 0.66.0)
 
 - Si el servidor rechaza un envío por cuota, crédito de IA o demasiadas solicitudes, el aviso dice esa causa en

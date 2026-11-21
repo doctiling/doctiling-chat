@@ -23,6 +23,28 @@ describe('TurnList — reading activity grouped by document', () => {
     expect(lines.filter((l) => l?.includes('Manual'))).toHaveLength(1);
   });
 
+  // 2026-11-20: like the studio chat, a finished turn folds its steps; the answer comes first.
+  it('a saved turn folds its steps under a closed summary with the count', () => {
+    renderApp(
+      <TurnList
+        turns={[{ id: 'a1', role: 'agent', content: 'done', activity: [read('Manual'), search, read('Contrato')] }]}
+        live={null}
+        hrefFor={(id) => `#${id}`}
+        onOpenDoc={noop}
+      />,
+    );
+    const fold = screen.getByTestId('turn-activity');
+    expect(fold.tagName).toBe('DETAILS');
+    expect(fold).not.toHaveAttribute('open');
+    expect(fold.querySelector('summary')?.textContent).toContain('3');
+  });
+
+  it('live, the steps stay in view (not folded)', () => {
+    renderApp(<TurnList turns={[]} live={{ text: '', thinking: false, activity: [search] }} hrefFor={(id) => `#${id}`} onOpenDoc={noop} />);
+    expect(screen.queryByTestId('turn-activity')).toBeNull();
+    expect(screen.getAllByTestId('activity-line')).toHaveLength(1);
+  });
+
   it('live, the typing dots follow the line of the read in progress', () => {
     renderApp(
       <TurnList
