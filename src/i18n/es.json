@@ -126,7 +126,8 @@
       "human_check": "No pudimos verificar que eres una persona. Recarga la página e inténtalo de nuevo.",
       "rate_limited": "Estás enviando preguntas muy rápido. Espera un momento e inténtalo de nuevo.",
       "daily_cap": "Este chat alcanzó su límite de preguntas por hoy. Vuelve mañana.",
-      "unavailable": "Este chat no está disponible en este momento."
+      "unavailable": "Este chat no está disponible en este momento.",
+      "changes_closed": "Esos cambios ya se mantuvieron o se deshicieron."
     },
     "readOnlyBadge": "Solo lectura",
     "placeholderReadOnly": "Pregunta a esta base (solo lectura)…",
@@ -136,7 +137,21 @@
     "listenResume": "Reanudar lectura",
     "listenStop": "Detener lectura",
     "blockLink": "bloque {n}",
-    "interrupted": "Se cortó la conexión y esta respuesta quedó incompleta. Vuelve a enviar la pregunta."
+    "interrupted": "Se cortó la conexión y esta respuesta quedó incompleta. Vuelve a enviar la pregunta.",
+    "openDocument": "Abierto: {title}",
+    "openDocumentHint": "El agente sabe que este documento está abierto: «esta tabla», «otra fila» o «este párrafo» se refieren a él.",
+    "changes": {
+      "summary": "El agente cambió {docs}",
+      "keep": "Mantener",
+      "keepHint": "Conservar los cambios de esta respuesta",
+      "undo": "Deshacer",
+      "undoHint": "Volver a como estaba antes de esta respuesta. Lo que alguien cambió después se conserva.",
+      "kept": "Cambios mantenidos",
+      "undone": "Cambios deshechos",
+      "undoneSkipped": "Cambios deshechos. {count} se conservaron porque alguien los cambió después.",
+      "failed": "No se pudo completar. Inténtalo de nuevo.",
+      "lead": "El agente cambió"
+    }
   },
   "sourceSheet": {
     "title": "Fuente",
@@ -149,7 +164,11 @@
       "database": "Tabla",
       "graph": "Grafo"
     },
-    "listen": "Escuchar el documento"
+    "listen": "Escuchar el documento",
+    "backToDocuments": "Volver a documentos",
+    "expand": "Ampliar el documento",
+    "shrink": "Reducir el documento",
+    "resize": "Arrastra para cambiar el ancho del documento"
   },
   "settings": {
     "title": "Ajustes",

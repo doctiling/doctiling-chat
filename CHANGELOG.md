@@ -2,6 +2,16 @@
 
 Consumers (doctiling-web) pin tags; every entry is a tag.
 
+## 0.15.0 — el chat edita el documento abierto, con Mantener / Deshacer (doctiling-web spec 086, ≥ 0.74.0)
+
+- El agente sabe qué documento está abierto junto al chat: «otra fila», «esta tabla» o «este párrafo» se refieren a
+  él sin tener que nombrarlo. Encima de la caja se ve «Abierto: <título>».
+- Bajo cada respuesta que cambió documentos aparece «El agente cambió «…»» con **Mantener** y **Deshacer**, como el
+  puntero del studio pero sin puntero. Deshacer vuelve a como estaba antes de esa respuesta; lo que otra persona
+  cambió después se conserva y se avisa. Los borrados siguen pidiendo confirmación antes de hacerse.
+- El panel del documento tiene «Volver a documentos», un botón para ampliarlo y un borde que se arrastra (o se
+  mueve con las flechas) para cambiar su ancho; el ancho se recuerda en este dispositivo.
+
 ## 0.14.1 — los pasos del agente se pliegan, como en el studio
 
 - En una respuesta terminada, los pasos del agente («Buscando…», «Leyendo un documento…») quedan plegados bajo

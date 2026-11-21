@@ -26,6 +26,8 @@ type Props = {
   children?: React.ReactNode;
   /** Follow-up chips on the last agent turn fill the composer. */
   onPickFollowup?: (q: string) => void;
+  /** What shows under an agent turn after its answer (web spec 086 extension: keep / undo its changes). */
+  footerFor?: (turn: Turn) => React.ReactNode;
 };
 
 /** The documents a turn read, once each, in the order read. */
@@ -55,7 +57,19 @@ function SourceChip({ src, hrefFor, onOpenDoc }: { src: ActivitySource; hrefFor:
   );
 }
 
-function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; hrefFor: Props['hrefFor']; onOpenDoc: Props['onOpenDoc']; onPickFollowup?: (q: string) => void }) {
+function Bubble({
+  turn,
+  hrefFor,
+  onOpenDoc,
+  onPickFollowup,
+  footer,
+}: {
+  turn: Turn;
+  hrefFor: Props['hrefFor'];
+  onOpenDoc: Props['onOpenDoc'];
+  onPickFollowup?: (q: string) => void;
+  footer?: React.ReactNode;
+}) {
   const { t } = useLanguage();
   const isUser = turn.role === 'user';
   const split = React.useMemo(() => (isUser ? { text: turn.content, followups: [] } : splitFollowups(turn.content)), [isUser, turn.content]);
@@ -120,6 +134,7 @@ function Bubble({ turn, hrefFor, onOpenDoc, onPickFollowup }: { turn: Turn; href
           )}
         </div>
       )}
+      {!isUser && footer}
       {!isUser && <ListenControls id={turn.id} text={speakable} />}
       {isUser && turn.references && turn.references.length > 0 && (
         <ul className="flex max-w-[85%] flex-wrap justify-end gap-1 px-1" data-testid="turn-refs" aria-label={t('mentions.references')}>
@@ -163,7 +178,7 @@ function useReadNewReplies(turns: Turn[]) {
   }, [lastAgent, speech]);
 }
 
-export function TurnList({ turns, live, hrefFor, onOpenDoc, children, onPickFollowup }: Props) {
+export function TurnList({ turns, live, hrefFor, onOpenDoc, children, onPickFollowup, footerFor }: Props) {
   const { t } = useLanguage();
   useReadNewReplies(turns);
   const liveRendered = React.useMemo(
@@ -179,7 +194,14 @@ export function TurnList({ turns, live, hrefFor, onOpenDoc, children, onPickFoll
   return (
     <div className="flex flex-col gap-4 px-4 py-4">
       {turns.map((turn, i) => (
-        <Bubble key={turn.id} turn={turn} hrefFor={hrefFor} onOpenDoc={onOpenDoc} onPickFollowup={!live && i === turns.length - 1 ? onPickFollowup : undefined} />
+        <Bubble
+          key={turn.id}
+          turn={turn}
+          hrefFor={hrefFor}
+          onOpenDoc={onOpenDoc}
+          onPickFollowup={!live && i === turns.length - 1 ? onPickFollowup : undefined}
+          footer={footerFor?.(turn)}
+        />
       ))}
       {live && (
         <article className="flex flex-col items-start gap-1" data-testid="turn-live" data-role="agent">
